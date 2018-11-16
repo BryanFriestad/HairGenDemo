@@ -27,5 +27,7 @@
     "start": "webpack-dev-server --hot --inline --mode=development",
     "lint": "eslint ."
   },
-  "dependencies": {}
+  "dependencies": {
+    "file-loader": "^2.0.0"
+  }
 }

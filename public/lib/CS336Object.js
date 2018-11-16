@@ -5,11 +5,12 @@
  * has a list of child objects and a hook, drawFunction, for rendering the
  * object and then recursively rendering all the child objects.
  */
-var CS336Object = function(drawFunction)
+
+ export default class CS336Object = function(drawFunction)
 {
   // children of this object
   this.children = [];
-  
+
   // position of this object
   this.position = new Vector3([0, 0, 0]);
 
@@ -17,7 +18,7 @@ var CS336Object = function(drawFunction)
   // This will *always* be an orthogonal matrix whose first three columns
   // are the three basis vectors for this object's frame
   this.rotation = new Matrix4();
-  
+
   // scale for this object
   this.scale = new Vector3([ 1, 1, 1 ]);
 
@@ -103,9 +104,9 @@ CS336Object.prototype.addChild = function(child)
 };
 
 /**
- * Renders this object using the drawObject callback function and recursing 
+ * Renders this object using the drawObject callback function and recursing
  * through the children.
- * @param matrixWorld 
+ * @param matrixWorld
  *   frame transformation for this object's parent
  */
 CS336Object.prototype.render = function(matrixWorld)
@@ -190,14 +191,14 @@ CS336Object.prototype.rotateX = function(degrees)
 {
   // We can do this as an intrinsic x-rotation
   this.rotation.rotate(degrees, 1, 0, 0);
-  
+
   // Alternatively, multiply on left by a rotation about the object's x-axis,
   // which is the first column of rotation matrix
 //  var x = this.rotation.elements[0];
 //  var y = this.rotation.elements[1];
 //  var z = this.rotation.elements[2];
 //  this.rotation = new Matrix4().setRotate(degrees, x, y, z).multiply(this.rotation);
-  
+
   this.matrixNeedsUpdate = true;
 };
 
@@ -208,14 +209,14 @@ CS336Object.prototype.rotateY = function(degrees)
 {
   // We can do this as an intrinsic y-rotation
   this.rotation.rotate(degrees, 0, 1, 0);
-  
+
   // Alternatively, multiply on left by a rotation about the object's y-axis,
   // which is the second column of rotation matrix
 //  var x = this.rotation.elements[4];
 //  var y = this.rotation.elements[5];
 //  var z = this.rotation.elements[6];
 //  this.rotation = new Matrix4().setRotate(degrees, x, y, z).multiply(this.rotation);
-  
+
   this.matrixNeedsUpdate = true;
 };
 
@@ -226,14 +227,14 @@ CS336Object.prototype.rotateZ = function(degrees, x, y, z)
 {
   // We can do this as an intrinsic z-rotation
   this.rotation.rotate(degrees, 0, 0, 1);
-  
+
   // Alternatively, multiply on left by a rotation about the object's z-axis,
   // which is the third column of rotation matrix
 //  var x = this.rotation.elements[8];
 //  var y = this.rotation.elements[9];
 //  var z = this.rotation.elements[10];
 //  this.rotation = new Matrix4().setRotate(degrees, x, y, z).multiply(this.rotation);
-  
+
   this.matrixNeedsUpdate = true;
 };
 
@@ -349,7 +350,7 @@ CS336Object.prototype.lookAt = function(x, y, z)
   fx =  x - this.position.elements[0];
   fy =  y - this.position.elements[1];
   fz =  z - this.position.elements[2] ;
-  
+
   // Normalize f.
   rlf = 1 / Math.sqrt(fx*fx + fy*fy + fz*fz);
   fx *= rlf;
@@ -360,7 +361,7 @@ CS336Object.prototype.lookAt = function(x, y, z)
   upX = 0;
   upY = 1;
   upZ = 0;
-  
+
   // Calculate cross product of f and up.
   sx = fy * upZ - fz * upY;
   sy = fz * upX - fx * upZ;
@@ -381,16 +382,16 @@ CS336Object.prototype.lookAt = function(x, y, z)
   this.rotation.elements[0] = sx;
   this.rotation.elements[1] = sy;
   this.rotation.elements[2] = sz;
-  
+
   this.rotation.elements[4] = ux;
   this.rotation.elements[5] = uy;
   this.rotation.elements[6] = uz;
-  
+
   this.rotation.elements[8] = -fx;
   this.rotation.elements[9] = -fy;
   this.rotation.elements[10] = -fz;
-  
+
   this.matrixNeedsUpdate = true;
-  
+
 
 };

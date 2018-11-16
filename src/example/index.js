@@ -1,150 +1,391 @@
 import VSHADER_SOURCE from './vshader.glsl';
 import FSHADER_SOURCE from './fshader.glsl';
+import CheckerBoard from './check64.png';
+//import CS336Object from './lib/CS336Object.js';
 
-/**
- * Example code from: http://web.cs.iastate.edu/~smkautz/cs336f17/examples/example123/GL_example1.js
- */
+ var theModel;
 
-// Raw data for some point positions - this will be a square, consisting
-// of two triangles.  We provide two values per vertex for the x and y coordinates
-// (z will be zero by default).
-var numPoints = 6;
-var vertices = new Float32Array([
-  -0.5,
-  -0.5,
-  0.5,
-  -0.5,
-  0.5,
-  0.5,
-  -0.5,
-  -0.5,
-  0.5,
-  0.5,
-  -0.5,
-  0.5,
-]);
+ // cube
+ theModel = getModelData(new THREE.CubeGeometry(1, 1, 1));
 
-// A few global variables...
+ var imageFilename = CheckerBoard;
 
-// the OpenGL context
-var gl;
+ // given an instance of THREE.Geometry, returns an object
+ // containing raw data for vertices and normal vectors.
+ function getModelData(geom)
+ {
+ 	var verticesArray = [];
+ 	var normalsArray = [];
+ 	var vertexNormalsArray = [];
+ 	var reflectedNormalsArray = [];
+ 	var count = 0;
+ 	for (var f = 0; f < geom.faces.length; ++f)
+ 	{
+ 		var face = geom.faces[f];
+ 		var v = geom.vertices[face.a];
+ 		verticesArray.push(v.x);
+ 		verticesArray.push(v.y);
+ 		verticesArray.push(v.z);
 
-// handle to a buffer on the GPU
-var vertexbuffer;
+ 		v = geom.vertices[face.b];
+ 		verticesArray.push(v.x);
+ 		verticesArray.push(v.y);
+ 		verticesArray.push(v.z);
 
-// handle to the compiled shader program on the GPU
-var shader;
+ 		v = geom.vertices[face.c];
+ 		verticesArray.push(v.x);
+ 		verticesArray.push(v.y);
+ 		verticesArray.push(v.z);
+ 		count += 3;
 
-// code to actually render our geometry
-function draw() {
-  // clear the framebuffer
-  gl.clear(gl.COLOR_BUFFER_BIT);
+ 		var fn = face.normal;
+ 		for (var i = 0; i < 3; ++i)
+ 		{
+ 			normalsArray.push(fn.x);
+ 			normalsArray.push(fn.y);
+ 			normalsArray.push(fn.z);
+ 		}
 
-  // bind the shader
-  gl.useProgram(shader);
+ 		for (var i = 0; i < 3; ++i)
+ 		{
+ 			var vn = face.vertexNormals[i];
+ 			vertexNormalsArray.push(vn.x);
+ 			vertexNormalsArray.push(vn.y);
+ 			vertexNormalsArray.push(vn.z);
+ 		}
 
-  // bind the buffer
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertexbuffer);
+ 	}
 
-  // get the index for the a_Position attribute defined in the vertex shader
-  var positionIndex = gl.getAttribLocation(shader, 'a_Position');
-  if (positionIndex < 0) {
-    console.error('Failed to get the storage location of a_Position');
-    return;
-  }
+   // texture coords
+   //each element is an array of three Vector2
+   var uvs = geom.faceVertexUvs[ 0 ];
+   var texCoordArray = [];
+   for (var a = 0; a < uvs.length; ++a)
+   {
+     for (var i = 0; i < 3; ++i)
+     {
+       var uv = uvs[a][i];
+       texCoordArray.push(uv.x);
+       texCoordArray.push(uv.y);
+     }
+   }
 
-  // "enable" the a_position attribute
-  gl.enableVertexAttribArray(positionIndex);
+ 	return {
+ 		numVertices: count,
+ 		vertices: new Float32Array(verticesArray),
+ 		normals: new Float32Array(normalsArray),
+ 		vertexNormals: new Float32Array(vertexNormalsArray),
+     reflectedNormals: new Float32Array(reflectedNormalsArray),
+     texCoords: new Float32Array(texCoordArray)
+ 	};
+ }
 
-  // associate the data in the currently bound buffer with the a_position attribute
-  // (The '2' specifies there are 2 floats per vertex in the buffer.  Don't worry about
-  // the last three args just yet.)
-  gl.vertexAttribPointer(positionIndex, 2, gl.FLOAT, false, 0, 0);
 
-  // we can unbind the buffer now (not really necessary when there is only one buffer)
-  gl.bindBuffer(gl.ARRAY_BUFFER, null);
+ function makeNormalMatrixElements(model, view)
+ {
+ 	var n = new Matrix4(view).multiply(model);
+ 	n.transpose();
+ 	n.invert();
+ 	n = n.elements;
+ 	return new Float32Array([
+ 	n[0], n[1], n[2],
+ 	n[4], n[5], n[6],
+ 	n[8], n[9], n[10] ]);
+ }
 
-  // draw, specifying the type of primitive to assemble from the vertices
-  //gl.drawArrays(gl.TRIANGLES, 0, 6);
-  //gl.drawArrays(gl.LINE_LOOP, 0, numPoints);
+ // light and material properties, remember this is column major
 
-  // alternatively, just use part of the data in the buffer
-  //gl.drawArrays(gl.TRIANGLES, 0, 3);
-  gl.drawArrays(gl.TRIANGLES, 3, 3);
+ // generic white light
+ var lightPropElements = new Float32Array([
+ 0.2, 0.2, 0.2,
+ 0.7, 0.7, 0.7,
+ 0.7, 0.7, 0.7
+ ]);
 
-  // unbind shader and "disable" the attribute indices
-  // (not really necessary when there is only one shader)
-  gl.disableVertexAttribArray(positionIndex);
-  gl.useProgram(null);
-}
 
-// entry point when page is loaded
-function main() {
-  // basically this function does setup that "should" only have to be done once,
-  // while draw() does things that have to be repeated each time the canvas is
-  // redrawn
 
-  // retrieve <canvas> element
-  var canvas = document.getElementById('theCanvas');
+ //very fake looking white, useful for testing lights
+ var matPropElements = new Float32Array([
+ 1, 1, 1,
+ 1, 1, 1,
+ 1, 1, 1
+ ]);
+ var shininess = 20.0;
 
-  // get the rendering context for WebGL, using the utility from the teal book
-  // (Set second argument to true for debug version.  Note the debug version is
-  // incompatible with Firefox shader editor.)
-  gl = getWebGLContext(canvas, false);
+ // the OpenGL context
+ var gl;
 
-  if (!gl) {
-    console.error('Failed to get the rendering context for WebGL');
-    return;
-  }
+ // handle to a buffer on the GPU
+ var vertexBuffer;
+ var vertexNormalBuffer;
+ var texCoordBuffer;
 
-  // load and compile the shader pair, using utility from the teal book
-  if (!initShaders(gl, VSHADER_SOURCE, FSHADER_SOURCE)) {
-    console.error('Failed to intialize shaders.');
-    return;
-  }
+ //handle to the texture object on the GPU
+ var textureHandle;
 
-  // retain a handle to the shader program, then unbind it
-  // (This looks odd, but the way initShaders works is that it "binds" the shader and
-  // stores the handle in an extra property of the gl object.  That's ok, but will really
-  // mess things up when we have more than one shader pair.)
-  shader = gl.program;
-  gl.useProgram(null);
+ // handle to the compiled shader program on the GPU
+ var shader;
 
-  // request a handle for a chunk of GPU memory
-  vertexbuffer = gl.createBuffer();
-  if (!vertexbuffer) {
-    console.error('Failed to create the buffer object');
-    return;
-  }
+ // transformation matrices
+ var model = new Matrix4();
+ var modelScale = new Matrix4();
 
-  // "bind" the buffer as the current array buffer
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertexbuffer);
+ var axis = 'y';
+ var paused = false;
 
-  // load our data onto the GPU (uses the currently bound buffer)
-  gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+ var lightPosition = new Vector4([-4, 4, 4, 1]);
 
-  // now that the buffer is filled with data, we can unbind it
-  // (we still have the handle, so we can bind it again when needed)
-  gl.bindBuffer(gl.ARRAY_BUFFER, null);
+ //view matrix
+ var view = new Matrix4().setLookAt(
+     1.77, 2, 3.06,   // eye
+     0, 0, 0,            // at - looking at the origin
+     0, 1, 0);           // up vector - y axis
 
-  // specify a fill color for clearing the framebuffer
-  gl.clearColor(0.0, 0.8, 0.8, 1.0);
+ var projection = new Matrix4().setPerspective(35, 1.5, 0.1, 1000);
 
-  // we could just call draw() once to see the result, but setting up an animation
-  // loop to continually update the canvas makes it easier to experiment with the
-  // shaders
-  //draw();
+ //translate keypress events to strings
+ //from http://javascript.info/tutorial/keyboard-events
+ function getChar(event) {
+ if (event.which == null) {
+  return String.fromCharCode(event.keyCode) // IE
+ } else if (event.which!=0 && event.charCode!=0) {
+  return String.fromCharCode(event.which)   // the rest
+ } else {
+  return null // special key
+ }
+ }
 
-  // define an animation loop
-  var animate = function() {
-    draw();
+ function handleKeyPress(event)
+ {
+   var ch = getChar(event);
 
-    // request that the browser calls animate() again "as soon as it can"
-    requestAnimationFrame(animate, canvas);
-  };
+   switch (ch)
+   {
+   case ' ':
+ 		paused = !paused;
+ 		event.preventDefault();
+ 		return false;
+ 	case 'x':
+ 		axis = 'x';
+ 		break;
+ 	case 'y':
+ 		axis = 'y';
+ 		break;
+ 	case 'z':
+ 		axis = 'z';
+ 		break;
+   }
+ }
 
-  // start drawing!
-  animate();
-}
+
+
+ // code to actually render our geometry
+ function draw()
+ {
+   // clear the framebuffer
+ 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BIT);
+
+   // bind the shader
+   gl.useProgram(shader);
+
+   // get the index for the a_Position attribute defined in the vertex shader
+   var positionIndex = gl.getAttribLocation(shader, 'a_Position');
+   if (positionIndex < 0) {
+     console.log('Failed to get the storage location of a_Position');
+     return;
+   }
+
+   var normalIndex = gl.getAttribLocation(shader, 'a_Normal');
+   if (normalIndex < 0) {
+ 	    console.log('Failed to get the storage location of a_Normal');
+ 	    return;
+ 	  }
+
+   var texCoordIndex = gl.getAttribLocation(shader, 'a_TexCoord');
+   if (texCoordIndex < 0) {
+     console.log('Failed to get the storage location of a_TexCoord');
+     return;
+   }
+
+   // "enable" the a_position attribute
+   gl.enableVertexAttribArray(positionIndex);
+   gl.enableVertexAttribArray(normalIndex);
+   gl.enableVertexAttribArray(texCoordIndex);
+
+   // bind buffers for points
+   gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+   gl.vertexAttribPointer(positionIndex, 3, gl.FLOAT, false, 0, 0);
+   gl.bindBuffer(gl.ARRAY_BUFFER, vertexNormalBuffer);
+   gl.vertexAttribPointer(normalIndex, 3, gl.FLOAT, false, 0, 0);
+   gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+   gl.vertexAttribPointer(texCoordIndex, 2, gl.FLOAT, false, 0, 0);
+   gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+   // set uniform in shader for projection * view * model transformation
+   var loc = gl.getUniformLocation(shader, "model");
+   var current = new Matrix4(model).multiply(modelScale);
+   gl.uniformMatrix4fv(loc, false, current.elements);
+   loc = gl.getUniformLocation(shader, "view");
+   gl.uniformMatrix4fv(loc, false, view.elements);
+   loc = gl.getUniformLocation(shader, "projection");
+   gl.uniformMatrix4fv(loc, false, projection.elements);
+   loc = gl.getUniformLocation(shader, "normalMatrix");
+   gl.uniformMatrix3fv(loc, false, makeNormalMatrixElements(model, view));
+
+   loc = gl.getUniformLocation(shader, "lightPosition");
+   gl.uniform4fv(loc, lightPosition.elements);
+
+   // light and material properties
+   loc = gl.getUniformLocation(shader, "lightProperties");
+   gl.uniformMatrix3fv(loc, false, lightPropElements);
+   loc = gl.getUniformLocation(shader, "materialProperties");
+   gl.uniformMatrix3fv(loc, false, matPropElements);
+   loc = gl.getUniformLocation(shader, "shininess");
+   gl.uniform1f(loc, shininess);
+
+
+   // need to choose a texture unit, then bind the texture to TEXTURE_2D for that unit
+   var textureUnit = 1;
+   gl.activeTexture(gl.TEXTURE0 + textureUnit);
+   gl.bindTexture(gl.TEXTURE_2D, textureHandle);
+   loc = gl.getUniformLocation(shader, "sampler");
+   gl.uniform1i(loc, textureUnit);
+
+   // draw!
+   gl.drawArrays(gl.TRIANGLES, 0, theModel.numVertices);
+
+   // unbind shader and "disable" the attribute indices
+   // (not really necessary when there is only one shader)
+   gl.disableVertexAttribArray(normalIndex);
+   gl.disableVertexAttribArray(positionIndex);
+   gl.useProgram(null);
+
+ }
+
+ //entry point when page is loaded.  Wait for image to load before proceeding
+ function main() {
+   var image = new Image();
+   image.onload = function() {
+     // chain the next function
+     startForReal(image);
+     };
+
+   // starts loading the image asynchronously
+   image.src = imageFilename;
+ }
+
+ // entry point when page is loaded
+ function startForReal(image) {
+
+   // retrieve <canvas> element
+   var canvas = document.getElementById('theCanvas');
+
+   // key handler
+   window.onkeypress = handleKeyPress;
+
+   // get the rendering context for WebGL, using the utility from the teal book
+   gl = getWebGLContext(canvas, false);
+   if (!gl) {
+     console.log('Failed to get the rendering context for WebGL');
+     return;
+   }
+
+   // load and compile the shader pair, using utility from the teal book
+   var vshaderSource = VSHADER_SOURCE;
+   var fshaderSource = FSHADER_SOURCE;
+   if (!initShaders(gl, vshaderSource, fshaderSource)) {
+     console.log('Failed to intialize shaders.');
+     return;
+   }
+   shader = gl.program;
+   gl.useProgram(null);
+
+
+
+   // buffer for vertex positions for triangles
+   vertexBuffer = gl.createBuffer();
+   if (!vertexBuffer) {
+ 	  console.log('Failed to create the buffer object');
+ 	  return;
+   }
+   gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+   gl.bufferData(gl.ARRAY_BUFFER, theModel.vertices, gl.STATIC_DRAW);
+
+   // buffer for normals
+   vertexNormalBuffer = gl.createBuffer();
+   if (!vertexNormalBuffer) {
+ 	  console.log('Failed to create the buffer object');
+ 	  return;
+   }
+   gl.bindBuffer(gl.ARRAY_BUFFER, vertexNormalBuffer);
+   gl.bufferData(gl.ARRAY_BUFFER, theModel.vertexNormals, gl.STATIC_DRAW);
+
+
+   // buffer for tex coords
+   texCoordBuffer = gl.createBuffer();
+   if (!texCoordBuffer) {
+     console.log('Failed to create the buffer object');
+     return;
+   }
+   gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+   gl.bufferData(gl.ARRAY_BUFFER, theModel.texCoords, gl.STATIC_DRAW);
+
+   // ask the GPU to create a texture object
+   textureHandle = gl.createTexture();
+
+   // choose a texture unit to use during setup, defaults to zero
+   // (can use a different one when drawing)
+   // max value is MAX_COMBINED_TEXTURE_IMAGE_UNITS
+   gl.activeTexture(gl.TEXTURE0);
+
+   // bind the texture
+   gl.bindTexture(gl.TEXTURE_2D, textureHandle);
+
+   // load the image bytes to the currently bound texture, flipping the vertical
+   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
+   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+
+   // texture parameters are stored with the texture
+   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+
+   // specify a fill color for clearing the framebuffer
+   gl.clearColor(0.0, 0.0, 0.0, 1.0);
+
+   gl.enable(gl.DEPTH_TEST);
+
+   // define an animation loop
+   var animate = function() {
+ 	draw();
+
+ 	// increase the rotation by some amount, depending on the axis chosen
+ 	var increment = 0.5;
+ 	if (!paused)
+ 	{
+ 		switch(axis)
+ 		{
+ 		case 'x':
+ 			model = new Matrix4().setRotate(increment, 1, 0, 0).multiply(model);
+ 			axis = 'x';
+ 			break;
+ 		case 'y':
+ 			axis = 'y';
+ 			model = new Matrix4().setRotate(increment, 0, 1, 0).multiply(model);
+ 			break;
+ 		case 'z':
+ 			axis = 'z';
+ 			model = new Matrix4().setRotate(increment, 0, 0, 1).multiply(model);
+ 			break;
+ 		default:
+ 		}
+ 	}
+
+ 	// request that the browser calls animate() again "as soon as it can"
+     requestAnimationFrame(animate, canvas);
+   };
+
+   // start drawing!
+   animate();
+ }
 
 export default main;
