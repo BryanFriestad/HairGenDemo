@@ -131,7 +131,7 @@ var model = new Matrix4();
 var modelScale = new Matrix4();
 
 var axis = 'y';
-var paused = false;
+var paused = true;
 
 var lightPosition = new Vector4([-4, 4, 4, 1]);
 
@@ -386,7 +386,6 @@ function startForReal(image) {
      		default:
      		}
      	}
-
       requestAnimationFrame(animate, canvas);
     };
 
@@ -422,7 +421,7 @@ let drawHair = function(){
    loc = gl.getUniformLocation(line_shader, "lightPosition");
    gl.uniform4fv(loc, lightPosition.elements);
 
-   gl.drawArrays(gl.LINE_STRIP, 0, this.num_control_vertices);
+   gl.drawArrays(gl.LINE_STRIP, 0, this.final_vertices.length/3.0);
 
    gl.disableVertexAttribArray(positionIndex);
    gl.useProgram(null);
