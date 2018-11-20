@@ -1,4 +1,4 @@
-var HairStrand = function(length, base_x, base_y, base_z, normal_x, normal_y, normal_z, drawFunction){
+function HairStrand(length, base_x, base_y, base_z, normal_x, normal_y, normal_z, drawFunction){
   //we are assuming that normal has already been normalized to one unit
   //additionally, one unit on the normal is one unit on the length
   this.num_control_vertices = 8; //this will create n-1 control hair segments
