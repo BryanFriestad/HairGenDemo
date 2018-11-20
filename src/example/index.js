@@ -1,84 +1,82 @@
 import VSHADER_SOURCE from './vshader.glsl';
 import FSHADER_SOURCE from './fshader.glsl';
+import VSHADER_SOURCE_LINES from './vshader_lines.glsl';
+import FSHADER_SOURCE_LINES from './fshader_lines.glsl';
 import CheckerBoard from './check64.png';
-//import CS336Object from './lib/CS336Object.js';
 
- var theModel;
+let theModel = getModelData(new THREE.CubeGeometry(1, 1, 1));
+let hairs = [];
 
- // cube
- theModel = getModelData(new THREE.CubeGeometry(1, 1, 1));
+var imageFilename = CheckerBoard;
 
- var imageFilename = CheckerBoard;
+// given an instance of THREE.Geometry, returns an object
+// containing raw data for vertices and normal vectors.
+function getModelData(geom)
+{
+  	var verticesArray = [];
+  	var normalsArray = [];
+  	var vertexNormalsArray = [];
+  	var reflectedNormalsArray = [];
+  	var count = 0;
+  	for (var f = 0; f < geom.faces.length; ++f)
+  	{
+    		var face = geom.faces[f];
+    		var v = geom.vertices[face.a];
+    		verticesArray.push(v.x);
+    		verticesArray.push(v.y);
+    		verticesArray.push(v.z);
 
- // given an instance of THREE.Geometry, returns an object
- // containing raw data for vertices and normal vectors.
- function getModelData(geom)
- {
- 	var verticesArray = [];
- 	var normalsArray = [];
- 	var vertexNormalsArray = [];
- 	var reflectedNormalsArray = [];
- 	var count = 0;
- 	for (var f = 0; f < geom.faces.length; ++f)
- 	{
- 		var face = geom.faces[f];
- 		var v = geom.vertices[face.a];
- 		verticesArray.push(v.x);
- 		verticesArray.push(v.y);
- 		verticesArray.push(v.z);
+    		v = geom.vertices[face.b];
+    		verticesArray.push(v.x);
+    		verticesArray.push(v.y);
+    		verticesArray.push(v.z);
 
- 		v = geom.vertices[face.b];
- 		verticesArray.push(v.x);
- 		verticesArray.push(v.y);
- 		verticesArray.push(v.z);
+    		v = geom.vertices[face.c];
+    		verticesArray.push(v.x);
+    		verticesArray.push(v.y);
+    		verticesArray.push(v.z);
+    		count += 3;
 
- 		v = geom.vertices[face.c];
- 		verticesArray.push(v.x);
- 		verticesArray.push(v.y);
- 		verticesArray.push(v.z);
- 		count += 3;
+    		var fn = face.normal;
+    		for (var i = 0; i < 3; ++i)
+    		{
+    			normalsArray.push(fn.x);
+    			normalsArray.push(fn.y);
+    			normalsArray.push(fn.z);
+    		}
 
- 		var fn = face.normal;
- 		for (var i = 0; i < 3; ++i)
- 		{
- 			normalsArray.push(fn.x);
- 			normalsArray.push(fn.y);
- 			normalsArray.push(fn.z);
- 		}
+    		for (var i = 0; i < 3; ++i)
+    		{
+    			var vn = face.vertexNormals[i];
+    			vertexNormalsArray.push(vn.x);
+    			vertexNormalsArray.push(vn.y);
+    			vertexNormalsArray.push(vn.z);
+    		}
+  	}
 
- 		for (var i = 0; i < 3; ++i)
- 		{
- 			var vn = face.vertexNormals[i];
- 			vertexNormalsArray.push(vn.x);
- 			vertexNormalsArray.push(vn.y);
- 			vertexNormalsArray.push(vn.z);
- 		}
+     // texture coords
+     //each element is an array of three Vector2
+    var uvs = geom.faceVertexUvs[ 0 ];
+    var texCoordArray = [];
+    for (var a = 0; a < uvs.length; ++a)
+    {
+       for (var i = 0; i < 3; ++i)
+       {
+         var uv = uvs[a][i];
+         texCoordArray.push(uv.x);
+         texCoordArray.push(uv.y);
+       }
+    }
 
- 	}
-
-   // texture coords
-   //each element is an array of three Vector2
-   var uvs = geom.faceVertexUvs[ 0 ];
-   var texCoordArray = [];
-   for (var a = 0; a < uvs.length; ++a)
-   {
-     for (var i = 0; i < 3; ++i)
-     {
-       var uv = uvs[a][i];
-       texCoordArray.push(uv.x);
-       texCoordArray.push(uv.y);
-     }
-   }
-
- 	return {
- 		numVertices: count,
- 		vertices: new Float32Array(verticesArray),
- 		normals: new Float32Array(normalsArray),
- 		vertexNormals: new Float32Array(vertexNormalsArray),
-     reflectedNormals: new Float32Array(reflectedNormalsArray),
-     texCoords: new Float32Array(texCoordArray)
- 	};
- }
+  	return {
+  		numVertices: count,
+  		vertices: new Float32Array(verticesArray),
+  		normals: new Float32Array(normalsArray),
+  		vertexNormals: new Float32Array(vertexNormalsArray),
+      reflectedNormals: new Float32Array(reflectedNormalsArray),
+      texCoords: new Float32Array(texCoordArray)
+  	};
+}
 
 
  function makeNormalMatrixElements(model, view)
@@ -116,79 +114,80 @@ import CheckerBoard from './check64.png';
  var gl;
 
  // handle to a buffer on the GPU
- var vertexBuffer;
- var vertexNormalBuffer;
- var texCoordBuffer;
+let hairVertexBuffer;
+var vertexBuffer;
+var vertexNormalBuffer;
+var texCoordBuffer;
 
- //handle to the texture object on the GPU
- var textureHandle;
+//handle to the texture object on the GPU
+var textureHandle;
 
  // handle to the compiled shader program on the GPU
- var shader;
+var shader;
+let line_shader;
 
- // transformation matrices
- var model = new Matrix4();
- var modelScale = new Matrix4();
+// transformation matrices
+var model = new Matrix4();
+var modelScale = new Matrix4();
 
- var axis = 'y';
- var paused = false;
+var axis = 'y';
+var paused = false;
 
- var lightPosition = new Vector4([-4, 4, 4, 1]);
+var lightPosition = new Vector4([-4, 4, 4, 1]);
 
- //view matrix
- var view = new Matrix4().setLookAt(
-     1.77, 2, 3.06,   // eye
-     0, 0, 0,            // at - looking at the origin
-     0, 1, 0);           // up vector - y axis
+//view matrix
+var view = new Matrix4().setLookAt(
+   7, 2, 7,   // eye
+   0, 0, 0,   // at - looking at the origin
+   0, 1, 0);  // up vector - y axis
 
- var projection = new Matrix4().setPerspective(35, 1.5, 0.1, 1000);
+var projection = new Matrix4().setPerspective(35, 1.5, 0.1, 1000);
 
- //translate keypress events to strings
- //from http://javascript.info/tutorial/keyboard-events
- function getChar(event) {
- if (event.which == null) {
-  return String.fromCharCode(event.keyCode) // IE
- } else if (event.which!=0 && event.charCode!=0) {
-  return String.fromCharCode(event.which)   // the rest
- } else {
-  return null // special key
- }
- }
+function getChar(event) {
+  if (event.which == null) {
+    return String.fromCharCode(event.keyCode); // IE
+  }
+  else if (event.which!=0 && event.charCode!=0) {
+    return String.fromCharCode(event.which);   // the rest
+  }
+  else {
+    return null; // special key
+  }
+}
 
- function handleKeyPress(event)
- {
+function handleKeyPress(event)
+{
    var ch = getChar(event);
-
    switch (ch)
    {
    case ' ':
- 		paused = !paused;
- 		event.preventDefault();
- 		return false;
- 	case 'x':
- 		axis = 'x';
- 		break;
- 	case 'y':
- 		axis = 'y';
- 		break;
- 	case 'z':
- 		axis = 'z';
- 		break;
+  		paused = !paused;
+  		event.preventDefault();
+  		return false;
+  	case 'x':
+  		axis = 'x';
+  		break;
+  	case 'y':
+  		axis = 'y';
+  		break;
+  	case 'z':
+  		axis = 'z';
+  		break;
    }
- }
+}
 
+function render(){
+   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BIT);
+   //draw();
+   for(let i = 0; i < hairs.length; i++){
+      hairs[i].render(new Matrix4());
+   }
+}
 
-
- // code to actually render our geometry
- function draw()
- {
-   // clear the framebuffer
- 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BIT);
-
-   // bind the shader
+function draw()
+{
    gl.useProgram(shader);
 
-   // get the index for the a_Position attribute defined in the vertex shader
    var positionIndex = gl.getAttribLocation(shader, 'a_Position');
    if (positionIndex < 0) {
      console.log('Failed to get the storage location of a_Position');
@@ -207,12 +206,10 @@ import CheckerBoard from './check64.png';
      return;
    }
 
-   // "enable" the a_position attribute
    gl.enableVertexAttribArray(positionIndex);
    gl.enableVertexAttribArray(normalIndex);
    gl.enableVertexAttribArray(texCoordIndex);
 
-   // bind buffers for points
    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
    gl.vertexAttribPointer(positionIndex, 3, gl.FLOAT, false, 0, 0);
    gl.bindBuffer(gl.ARRAY_BUFFER, vertexNormalBuffer);
@@ -221,7 +218,6 @@ import CheckerBoard from './check64.png';
    gl.vertexAttribPointer(texCoordIndex, 2, gl.FLOAT, false, 0, 0);
    gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
-   // set uniform in shader for projection * view * model transformation
    var loc = gl.getUniformLocation(shader, "model");
    var current = new Matrix4(model).multiply(modelScale);
    gl.uniformMatrix4fv(loc, false, current.elements);
@@ -235,7 +231,6 @@ import CheckerBoard from './check64.png';
    loc = gl.getUniformLocation(shader, "lightPosition");
    gl.uniform4fv(loc, lightPosition.elements);
 
-   // light and material properties
    loc = gl.getUniformLocation(shader, "lightProperties");
    gl.uniformMatrix3fv(loc, false, lightPropElements);
    loc = gl.getUniformLocation(shader, "materialProperties");
@@ -243,24 +238,19 @@ import CheckerBoard from './check64.png';
    loc = gl.getUniformLocation(shader, "shininess");
    gl.uniform1f(loc, shininess);
 
-
-   // need to choose a texture unit, then bind the texture to TEXTURE_2D for that unit
    var textureUnit = 1;
    gl.activeTexture(gl.TEXTURE0 + textureUnit);
    gl.bindTexture(gl.TEXTURE_2D, textureHandle);
    loc = gl.getUniformLocation(shader, "sampler");
    gl.uniform1i(loc, textureUnit);
 
-   // draw!
    gl.drawArrays(gl.TRIANGLES, 0, theModel.numVertices);
 
-   // unbind shader and "disable" the attribute indices
-   // (not really necessary when there is only one shader)
    gl.disableVertexAttribArray(normalIndex);
    gl.disableVertexAttribArray(positionIndex);
+   gl.disableVertexAttribArray(texCoordIndex);
    gl.useProgram(null);
-
- }
+}
 
  //entry point when page is loaded.  Wait for image to load before proceeding
  function main() {
@@ -274,16 +264,11 @@ import CheckerBoard from './check64.png';
    image.src = imageFilename;
  }
 
- // entry point when page is loaded
- function startForReal(image) {
-
-   // retrieve <canvas> element
+function startForReal(image) {
    var canvas = document.getElementById('theCanvas');
 
-   // key handler
    window.onkeypress = handleKeyPress;
 
-   // get the rendering context for WebGL, using the utility from the teal book
    gl = getWebGLContext(canvas, false);
    if (!gl) {
      console.log('Failed to get the rendering context for WebGL');
@@ -300,22 +285,37 @@ import CheckerBoard from './check64.png';
    shader = gl.program;
    gl.useProgram(null);
 
-
+   // load and compile the shader pair, using utility from the teal book
+   vshaderSource = VSHADER_SOURCE_LINES;
+   fshaderSource = FSHADER_SOURCE_LINES;
+   if (!initShaders(gl, vshaderSource, fshaderSource)) {
+     console.log('Failed to intialize shaders.');
+     return;
+   }
+   line_shader = gl.program;
+   gl.useProgram(null);
 
    // buffer for vertex positions for triangles
    vertexBuffer = gl.createBuffer();
    if (!vertexBuffer) {
- 	  console.log('Failed to create the buffer object');
- 	  return;
+  	  console.log('Failed to create the buffer object');
+  	  return;
    }
    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
    gl.bufferData(gl.ARRAY_BUFFER, theModel.vertices, gl.STATIC_DRAW);
 
+   hairVertexBuffer  = gl.createBuffer();
+   if (!hairVertexBuffer) {
+  	  console.log('Failed to create the buffer object');
+  	  return;
+   }
+   gl.bindBuffer(gl.ARRAY_BUFFER, hairVertexBuffer);
+
    // buffer for normals
    vertexNormalBuffer = gl.createBuffer();
    if (!vertexNormalBuffer) {
- 	  console.log('Failed to create the buffer object');
- 	  return;
+  	  console.log('Failed to create the buffer object');
+  	  return;
    }
    gl.bindBuffer(gl.ARRAY_BUFFER, vertexNormalBuffer);
    gl.bufferData(gl.ARRAY_BUFFER, theModel.vertexNormals, gl.STATIC_DRAW);
@@ -346,46 +346,86 @@ import CheckerBoard from './check64.png';
    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
 
    // texture parameters are stored with the texture
-   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 
    // specify a fill color for clearing the framebuffer
    gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
    gl.enable(gl.DEPTH_TEST);
 
+   for(let i = 0; i < 50; i++){
+     let temp_x = Math.random() * 0.1;
+     let temp_z = Math.random() * 0.1;
+     let temp_y = Math.sqrt(1.0 - Math.pow(temp_x, 2) - Math.pow(temp_z, 2));
+     hairs.push(new HairStrand(2, Math.random() * 4 - 2, 0, Math.random() * 4 - 2, temp_x, temp_y, temp_z, drawHair));
+   }
+
    // define an animation loop
-   var animate = function() {
- 	draw();
+    var animate = function()
+    {
+      render();
 
- 	// increase the rotation by some amount, depending on the axis chosen
- 	var increment = 0.5;
- 	if (!paused)
- 	{
- 		switch(axis)
- 		{
- 		case 'x':
- 			model = new Matrix4().setRotate(increment, 1, 0, 0).multiply(model);
- 			axis = 'x';
- 			break;
- 		case 'y':
- 			axis = 'y';
- 			model = new Matrix4().setRotate(increment, 0, 1, 0).multiply(model);
- 			break;
- 		case 'z':
- 			axis = 'z';
- 			model = new Matrix4().setRotate(increment, 0, 0, 1).multiply(model);
- 			break;
- 		default:
- 		}
- 	}
+     	var increment = 0.5;
+     	if (!paused)
+     	{
+     		switch(axis)
+     		{
+     		case 'x':
+     			model = new Matrix4().setRotate(increment, 1, 0, 0).multiply(model);
+     			axis = 'x';
+     			break;
+     		case 'y':
+     			axis = 'y';
+     			model = new Matrix4().setRotate(increment, 0, 1, 0).multiply(model);
+     			break;
+     		case 'z':
+     			axis = 'z';
+     			model = new Matrix4().setRotate(increment, 0, 0, 1).multiply(model);
+     			break;
+     		default:
+     		}
+     	}
 
- 	// request that the browser calls animate() again "as soon as it can"
-     requestAnimationFrame(animate, canvas);
-   };
+      requestAnimationFrame(animate, canvas);
+    };
 
-   // start drawing!
    animate();
  }
+
+
+let drawHair = function(){
+   gl.useProgram(line_shader);
+
+   var positionIndex = gl.getAttribLocation(line_shader, 'a_Position');
+   if (positionIndex < 0) {
+     console.log('Failed to get the storage location of a_Position');
+     return;
+   }
+
+   gl.enableVertexAttribArray(positionIndex);
+
+   gl.bindBuffer(gl.ARRAY_BUFFER, hairVertexBuffer);
+   gl.bufferData(gl.ARRAY_BUFFER, this.final_vertices, gl.STATIC_DRAW);
+   gl.vertexAttribPointer(positionIndex, 3, gl.FLOAT, false, 0, 0);
+
+   var loc = gl.getUniformLocation(line_shader, "model");
+   var current = new Matrix4(model).multiply(modelScale);
+   gl.uniformMatrix4fv(loc, false, current.elements);
+   loc = gl.getUniformLocation(line_shader, "view");
+   gl.uniformMatrix4fv(loc, false, view.elements);
+   loc = gl.getUniformLocation(line_shader, "projection");
+   gl.uniformMatrix4fv(loc, false, projection.elements);
+   loc = gl.getUniformLocation(line_shader, "normalMatrix");
+   gl.uniformMatrix3fv(loc, false, makeNormalMatrixElements(model, view));
+
+   loc = gl.getUniformLocation(line_shader, "lightPosition");
+   gl.uniform4fv(loc, lightPosition.elements);
+
+   gl.drawArrays(gl.LINE_STRIP, 0, this.num_control_vertices);
+
+   gl.disableVertexAttribArray(positionIndex);
+   gl.useProgram(null);
+}
 
 export default main;

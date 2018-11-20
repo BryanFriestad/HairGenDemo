@@ -6,7 +6,7 @@
  * object and then recursively rendering all the child objects.
  */
 
- export default class CS336Object = function(drawFunction)
+let CS336Object = function(drawFunction)
 {
   // children of this object
   this.children = [];
@@ -395,3 +395,5 @@ CS336Object.prototype.lookAt = function(x, y, z)
 
 
 };
+
+// export default class CS336Object;
