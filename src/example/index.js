@@ -1,3 +1,6 @@
+import HairStrand from '../utils/Hair.js';
+import CS336Object from '../utils/CS336Object.js';
+import * as THREE from 'three';
 import VSHADER_SOURCE from './vshader.glsl';
 import FSHADER_SOURCE from './fshader.glsl';
 import VSHADER_SOURCE_LINES from './vshader_lines.glsl';

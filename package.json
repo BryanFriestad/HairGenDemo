@@ -28,6 +28,7 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "file-loader": "^2.0.0"
+    "file-loader": "^2.0.0",
+    "three": "^0.98.0"
   }
 }
