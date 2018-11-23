@@ -45,7 +45,9 @@ class HairStrand {
     }
     this.generateBezierControlVertices();
     this.final_vertices = this.generateFinalVertices(8); //8 is the number of verts between each pair of control points
-    this.draw();
+
+    const currentWorld = new Matrix4(matrixWorld);
+    this.draw(currentWorld);
   }
 
   generateBezierControlVertices() {
