@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <% let ops = htmlWebpackPlugin.options %>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>
+      <%= ops.title %>
+    </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <div id="root"></div>
+    <script src="./public/lib/webgl-utils.js"></script>
+    <script src="./public/lib/webgl-debug.js"></script>
+    <script src="./public/lib/cuon-utils.js"></script>
+    <script src="./public/lib/cuon-matrix.js"></script>
+  </body>
+</html>
