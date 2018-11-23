@@ -396,4 +396,4 @@ CS336Object.prototype.lookAt = function(x, y, z)
 
 };
 
-// export default class CS336Object;
+export default CS336Object;
