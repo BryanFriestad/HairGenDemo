@@ -9,7 +9,7 @@ import VSHADER_SOURCE_LINES from './vshader_lines.glsl';
 import FSHADER_SOURCE_LINES from './fshader_lines.glsl';
 import CheckerBoard from './check64.png';
 
-let theModel = getModelData(new THREE.CubeGeometry(1, 1, 1));
+let theModel = getModelData(new THREE.SphereGeometry(1, 16, 16));
 let hairs = [];
 
 const imageFilename = CheckerBoard;
@@ -152,7 +152,7 @@ let view = new Matrix4().setLookAt(
 let projection = new Matrix4().setPerspective(35, 1.5, 0.1, 1000);
 
 const cube = new HairyObject(drawCube, theModel, drawHair);
-cube.setScale(2, 2, 2);
+cube.setScale(1.5, 1.5, 1.5);
 
 function getChar(event) {
   if (event.which == null) {
