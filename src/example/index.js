@@ -5,8 +5,6 @@ import HairyObject from '../utils/HairyObject.js';
 import * as THREE from 'three';
 import VSHADER_SOURCE from './vshader.glsl';
 import FSHADER_SOURCE from './fshader.glsl';
-import VSHADER_SOURCE_LIGHTING from './vshader_lighting.glsl';
-import FSHADER_SOURCE_LIGHTING from './fshader_lighting.glsl';
 import VSHADER_SOURCE_LINES from './vshader_lines.glsl';
 import FSHADER_SOURCE_LINES from './fshader_lines.glsl';
 import CheckerBoard from './check64.png';
@@ -128,7 +126,6 @@ let textureHandle;
 // handle to the compiled shader program on the GPU
 let shader;
 let line_shader;
-let lightingShader;
 
 // transformation matrices
 let model = new Matrix4();
@@ -309,16 +306,6 @@ function startForReal(image) {
     return;
   }
   line_shader = gl.program;
-  gl.useProgram(null);
-
-  // load and compile the shader pair, using utility from the teal book
-  vshaderSource = VSHADER_SOURCE_LIGHTING;
-  fshaderSource = FSHADER_SOURCE_LIGHTING;
-  if (!initShaders(gl, vshaderSource, fshaderSource)) {
-    console.log('Failed to intialize shaders.');
-    return;
-  }
-  lightingShader = gl.program;
   gl.useProgram(null);
 
   // buffer for vertex positions for triangles
