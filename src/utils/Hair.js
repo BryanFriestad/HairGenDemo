@@ -2,24 +2,27 @@ import VerletParticle from './VerletParticle.js';
 import DistanceConstraint from '../utils/Constraint.js';
 
 class HairStrand {
-  constructor(
-    length,
-    base_x,
-    base_y,
-    base_z,
-    normal_x,
-    normal_y,
-    normal_z,
-    drawFunction,
-    constr_list
-  ) {
+  constructor({
+    length = 1,
+    base = [0, 0, 0],
+    normal = [1, 1, 1],
+    drawFunction = () => {},
+    res = 8,
+    constr_list,
+  }) {
+    this.length = length;
+    const [base_x, base_y, base_z] = base;
+    this.base = base;
+    const [normal_x, normal_y, normal_z] = normal;
+    this.normal = normal;
+    // console.log({ base, normal });
     //we are assuming that normal has already been normalized to one unit
     //additionally, one unit on the normal is one unit on the length
-    this.num_control_vertices = 8; //this will create n-1 control hair segments
+    this.num_control_vertices = res; //this will create n-1 control hair segments
     this.verlet_parts = [];
     this.bezier_control_vertices = [];
     this.final_vertices;
-    this.draw = drawFunction || function() {};
+    this.draw = drawFunction;
 
     for (let i = 0; i < this.num_control_vertices; i++) {
       let temp_x =
@@ -52,7 +55,7 @@ class HairStrand {
     }
 
     this.generateBezierControlVertices();
-    this.final_vertices = this.generateFinalVertices(8); //8 is the number of verts between each pair of control points
+    this.final_vertices = this.generateFinalVertices(this.num_control_vertices); //8 is the number of verts between each pair of control points
   }
 
   getRandomWiggle(range) {
@@ -69,7 +72,7 @@ class HairStrand {
       this.verlet_parts[i].update(delta_t);
     }
     this.generateBezierControlVertices();
-    this.final_vertices = this.generateFinalVertices(8); //8 is the number of verts between each pair of control points
+    this.final_vertices = this.generateFinalVertices(this.num_control_vertices); //8 is the number of verts between each pair of control points
   }
 
   render(matrixWorld) {
