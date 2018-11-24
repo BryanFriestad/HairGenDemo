@@ -6,8 +6,7 @@
  * object and then recursively rendering all the child objects.
  */
 
-let CS336Object = function(drawFunction)
-{
+let CS336Object = function(drawFunction) {
   // children of this object
   this.children = [];
 
@@ -20,7 +19,7 @@ let CS336Object = function(drawFunction)
   this.rotation = new Matrix4();
 
   // scale for this object
-  this.scale = new Vector3([ 1, 1, 1 ]);
+  this.scale = new Vector3([1, 1, 1]);
 
   // the object's current transformation, to be calculated
   // as translate * rotate * scale
@@ -30,7 +29,7 @@ let CS336Object = function(drawFunction)
 
   // if caller doesn't supply a function, use an empty one
   // for dummy objects
-  this.drawObject = drawFunction || function(){};
+  this.drawObject = drawFunction || function() {};
 };
 
 /**
@@ -39,9 +38,8 @@ let CS336Object = function(drawFunction)
  * @param y
  * @param z
  */
-CS336Object.prototype.setPosition = function(x, y, z)
-{
-  this.position = new Vector3([ x, y, z ]);
+CS336Object.prototype.setPosition = function(x, y, z) {
+  this.position = new Vector3([x, y, z]);
   this.matrixNeedsUpdate = true;
 };
 
@@ -51,9 +49,8 @@ CS336Object.prototype.setPosition = function(x, y, z)
  * @param y
  * @param z
  */
-CS336Object.prototype.setScale = function(x, y, z)
-{
-  this.scale = new Vector3([ x, y, z ]);
+CS336Object.prototype.setScale = function(x, y, z) {
+  this.scale = new Vector3([x, y, z]);
   this.matrixNeedsUpdate = true;
 };
 
@@ -64,8 +61,7 @@ CS336Object.prototype.setScale = function(x, y, z)
  * @param y
  * @param z
  */
-CS336Object.prototype.setRotation = function(rotationMatrix)
-{
+CS336Object.prototype.setRotation = function(rotationMatrix) {
   this.rotation = new Matrix4(rotationMatrix);
   this.matrixNeedsUpdate = true;
 };
@@ -75,10 +71,8 @@ CS336Object.prototype.setRotation = function(rotationMatrix)
  * translate * rotate * scale.
  * @returns
  */
-CS336Object.prototype.getMatrix = function()
-{
-  if (this.matrixNeedsUpdate)
-  {
+CS336Object.prototype.getMatrix = function() {
+  if (this.matrixNeedsUpdate) {
     var px, py, pz, sx, sy, sz;
     px = this.position.elements[0];
     py = this.position.elements[1];
@@ -88,8 +82,10 @@ CS336Object.prototype.getMatrix = function()
     sz = this.scale.elements[2];
 
     this.matrixNeedsUpdate = false;
-    this.matrix = new Matrix4().setTranslate(px, py, pz)
-        .multiply(this.rotation).scale(sx, sy, sz);
+    this.matrix = new Matrix4()
+      .setTranslate(px, py, pz)
+      .multiply(this.rotation)
+      .scale(sx, sy, sz);
   }
   return this.matrix;
 };
@@ -98,8 +94,7 @@ CS336Object.prototype.getMatrix = function()
  * Adds the given CS336Object to this object's list of children.
  * @param child
  */
-CS336Object.prototype.addChild = function(child)
-{
+CS336Object.prototype.addChild = function(child) {
   this.children.push(child);
 };
 
@@ -109,8 +104,7 @@ CS336Object.prototype.addChild = function(child)
  * @param matrixWorld
  *   frame transformation for this object's parent
  */
-CS336Object.prototype.render = function(matrixWorld)
-{
+CS336Object.prototype.render = function(matrixWorld) {
   // clone and update the world matrix
   var currentWorld = new Matrix4(matrixWorld).multiply(this.getMatrix());
 
@@ -118,8 +112,7 @@ CS336Object.prototype.render = function(matrixWorld)
   this.drawObject(currentWorld);
 
   // recurse through children using current world matrix
-  for (var i = 0; i < this.children.length; ++i)
-  {
+  for (var i = 0; i < this.children.length; ++i) {
     this.children[i].render(currentWorld);
   }
 };
@@ -127,8 +120,7 @@ CS336Object.prototype.render = function(matrixWorld)
 /**
  * Moves the CS336Object along its negative z-axis by the given amount.
  */
-CS336Object.prototype.moveForward = function(distance)
-{
+CS336Object.prototype.moveForward = function(distance) {
   // Third column of rotation is z-axis, position = position - distance * zAxis
   this.position.elements[0] += -distance * this.rotation.elements[8];
   this.position.elements[1] += -distance * this.rotation.elements[9];
@@ -139,16 +131,14 @@ CS336Object.prototype.moveForward = function(distance)
 /**
  * Moves the CS336Object along its positive z-axis by the given amount.
  */
-CS336Object.prototype.moveBack = function(distance)
-{
+CS336Object.prototype.moveBack = function(distance) {
   this.moveForward(-distance);
 };
 
 /**
  * Moves the CS336Object along its positive x-axis by the given amount.
  */
-CS336Object.prototype.moveRight = function(distance)
-{
+CS336Object.prototype.moveRight = function(distance) {
   // First column of rotation is x-axis, position = position + distance * xAxis
   this.position.elements[0] += distance * this.rotation.elements[0];
   this.position.elements[1] += distance * this.rotation.elements[1];
@@ -159,16 +149,14 @@ CS336Object.prototype.moveRight = function(distance)
 /**
  * Moves the CS336Object along its negative x-axis by the given amount.
  */
-CS336Object.prototype.moveLeft = function(distance)
-{
+CS336Object.prototype.moveLeft = function(distance) {
   this.moveRight(-distance);
 };
 
 /**
  * Moves the CS336Object along its own y-axis by the given amount.
  */
-CS336Object.prototype.moveUp = function(distance)
-{
+CS336Object.prototype.moveUp = function(distance) {
   // second column of rotation is y-axis, position = position + distance * yAxis
   this.position.elements[0] += distance * this.rotation.elements[4];
   this.position.elements[1] += distance * this.rotation.elements[5];
@@ -179,25 +167,23 @@ CS336Object.prototype.moveUp = function(distance)
 /**
  * Moves the CS336Object along its own negative y-axis by the given amount.
  */
-CS336Object.prototype.moveDown = function(distance)
-{
+CS336Object.prototype.moveDown = function(distance) {
   this.moveUp(-distance);
 };
 
 /**
  * Rotates the CS336Object ccw about its x-axis.
  */
-CS336Object.prototype.rotateX = function(degrees)
-{
+CS336Object.prototype.rotateX = function(degrees) {
   // We can do this as an intrinsic x-rotation
   this.rotation.rotate(degrees, 1, 0, 0);
 
   // Alternatively, multiply on left by a rotation about the object's x-axis,
   // which is the first column of rotation matrix
-//  var x = this.rotation.elements[0];
-//  var y = this.rotation.elements[1];
-//  var z = this.rotation.elements[2];
-//  this.rotation = new Matrix4().setRotate(degrees, x, y, z).multiply(this.rotation);
+  //  var x = this.rotation.elements[0];
+  //  var y = this.rotation.elements[1];
+  //  var z = this.rotation.elements[2];
+  //  this.rotation = new Matrix4().setRotate(degrees, x, y, z).multiply(this.rotation);
 
   this.matrixNeedsUpdate = true;
 };
@@ -205,17 +191,16 @@ CS336Object.prototype.rotateX = function(degrees)
 /**
  * Rotates the CS336Object ccw about its y-axis.
  */
-CS336Object.prototype.rotateY = function(degrees)
-{
+CS336Object.prototype.rotateY = function(degrees) {
   // We can do this as an intrinsic y-rotation
   this.rotation.rotate(degrees, 0, 1, 0);
 
   // Alternatively, multiply on left by a rotation about the object's y-axis,
   // which is the second column of rotation matrix
-//  var x = this.rotation.elements[4];
-//  var y = this.rotation.elements[5];
-//  var z = this.rotation.elements[6];
-//  this.rotation = new Matrix4().setRotate(degrees, x, y, z).multiply(this.rotation);
+  //  var x = this.rotation.elements[4];
+  //  var y = this.rotation.elements[5];
+  //  var z = this.rotation.elements[6];
+  //  this.rotation = new Matrix4().setRotate(degrees, x, y, z).multiply(this.rotation);
 
   this.matrixNeedsUpdate = true;
 };
@@ -223,17 +208,16 @@ CS336Object.prototype.rotateY = function(degrees)
 /**
  * Rotates the CS336Object ccw about its z-axis.
  */
-CS336Object.prototype.rotateZ = function(degrees, x, y, z)
-{
+CS336Object.prototype.rotateZ = function(degrees, x, y, z) {
   // We can do this as an intrinsic z-rotation
   this.rotation.rotate(degrees, 0, 0, 1);
 
   // Alternatively, multiply on left by a rotation about the object's z-axis,
   // which is the third column of rotation matrix
-//  var x = this.rotation.elements[8];
-//  var y = this.rotation.elements[9];
-//  var z = this.rotation.elements[10];
-//  this.rotation = new Matrix4().setRotate(degrees, x, y, z).multiply(this.rotation);
+  //  var x = this.rotation.elements[8];
+  //  var y = this.rotation.elements[9];
+  //  var z = this.rotation.elements[10];
+  //  this.rotation = new Matrix4().setRotate(degrees, x, y, z).multiply(this.rotation);
 
   this.matrixNeedsUpdate = true;
 };
@@ -241,9 +225,10 @@ CS336Object.prototype.rotateZ = function(degrees, x, y, z)
 /**
  * Rotates the CS336Object ccw about the given axis, specified as a vector.
  */
-CS336Object.prototype.rotateOnAxis = function(degrees, x, y, z)
-{
-  this.rotation = new Matrix4.setRotate(degrees, x, y, z).multiply(this.rotation);
+CS336Object.prototype.rotateOnAxis = function(degrees, x, y, z) {
+  this.rotation = new Matrix4.setRotate(degrees, x, y, z).multiply(
+    this.rotation
+  );
   this.matrixNeedsUpdate = true;
 };
 
@@ -251,15 +236,14 @@ CS336Object.prototype.rotateOnAxis = function(degrees, x, y, z)
  * Rotates the CS336Object ccw about the given axis, specified in terms of
  * pitch and head angles (as in spherical coordinates).
  */
-CS336Object.prototype.rotateOnAxisEuler = function(degrees, pitch, head)
-{
+CS336Object.prototype.rotateOnAxisEuler = function(degrees, pitch, head) {
   // RotateY(head) * RotateX(pitch) * RotateY(degrees) * RotateX(-pitch) * RotateY(-head)
   var newRotation = new Matrix4()
-      .setRotate(head, 0, 1, 0)
-      .rotate(pitch, 1, 0, 0)
-      .rotate(degrees, 0, 1, 0)
-      .rotate(-pitch, 1, 0, 0)
-      .rotate(-head, 0, 1, 0);
+    .setRotate(head, 0, 1, 0)
+    .rotate(pitch, 1, 0, 0)
+    .rotate(degrees, 0, 1, 0)
+    .rotate(-pitch, 1, 0, 0)
+    .rotate(-head, 0, 1, 0);
   this.rotation = newRotation.multiply(this.rotation);
   this.matrixNeedsUpdate = true;
 };
@@ -268,9 +252,10 @@ CS336Object.prototype.rotateOnAxisEuler = function(degrees, pitch, head)
  * Rotates the CS336Object counterclockwise about an axis through its center that is
  * parallel to the vector (0, 1, 0).
  */
-CS336Object.prototype.turnLeft = function(degrees)
-{
-  this.rotation = new Matrix4().setRotate(degrees, 0, 1, 0).multiply(this.rotation);
+CS336Object.prototype.turnLeft = function(degrees) {
+  this.rotation = new Matrix4()
+    .setRotate(degrees, 0, 1, 0)
+    .multiply(this.rotation);
   this.matrixNeedsUpdate = true;
 };
 
@@ -278,8 +263,7 @@ CS336Object.prototype.turnLeft = function(degrees)
  * Rotates the CS336Object clockwise about an axis through its center that is
  * parallel to the vector (0, 1, 0).
  */
-CS336Object.prototype.turnRight = function(degrees)
-{
+CS336Object.prototype.turnRight = function(degrees) {
   this.turnLeft(-degrees);
 };
 
@@ -289,8 +273,7 @@ CS336Object.prototype.turnRight = function(degrees)
  * positive z-axis the given distance in front of the CS336Object. (This operation is
  * equivalent to a moveForward, rotateX and then moveBack.
  */
-CS336Object.prototype.orbitUp = function(degrees, distance)
-{
+CS336Object.prototype.orbitUp = function(degrees, distance) {
   this.moveForward(distance);
   this.rotateX(degrees);
   this.moveBack(distance);
@@ -302,8 +285,7 @@ CS336Object.prototype.orbitUp = function(degrees, distance)
  * positive z-axis the given distance in front of the CS336Object. (This operation is
  * equivalent to a moveForward, rotateX and then moveBack.
  */
-CS336Object.prototype.orbitDown = function(degrees, distance)
-{
+CS336Object.prototype.orbitDown = function(degrees, distance) {
   this.orbitUp(-degrees, distance);
 };
 
@@ -313,8 +295,7 @@ CS336Object.prototype.orbitDown = function(degrees, distance)
  * CS336Object's positive z-axis the given distance in front of the CS336Object. (This
  * operation is equivalent to a moveForward, turnLeft, and moveBack.)
  */
-CS336Object.prototype.orbitRight = function(degrees, distance)
-{
+CS336Object.prototype.orbitRight = function(degrees, distance) {
   this.moveForward(distance);
   this.turnLeft(degrees);
   this.moveBack(distance);
@@ -326,8 +307,7 @@ CS336Object.prototype.orbitRight = function(degrees, distance)
  * CS336Object's positive z-axis the given distance in front of the CS336Object. (This
  * operation is equivalent to a moveForward, turnRight, and moveBack.)
  */
-CS336Object.prototype.orbitLeft = function(degrees, distance)
-{
+CS336Object.prototype.orbitLeft = function(degrees, distance) {
   this.orbitRight(-degrees, distance);
 };
 
@@ -335,8 +315,7 @@ CS336Object.prototype.orbitLeft = function(degrees, distance)
  * Orients the CS336Object at its current location to face the given position,
  * i.e., its positive z-axis is aligned with the given position.
  */
-CS336Object.prototype.lookAt = function(x, y, z)
-{
+CS336Object.prototype.lookAt = function(x, y, z) {
   //
   // this is essentially the same as the lookAt function in matrix4, but
   // a) we don't invert it
@@ -347,12 +326,12 @@ CS336Object.prototype.lookAt = function(x, y, z)
   //
   var fx, fy, fz, rlf, sx, sy, sz, rls, ux, uy, uz;
 
-  fx =  x - this.position.elements[0];
-  fy =  y - this.position.elements[1];
-  fz =  z - this.position.elements[2] ;
+  fx = x - this.position.elements[0];
+  fy = y - this.position.elements[1];
+  fz = z - this.position.elements[2];
 
   // Normalize f.
-  rlf = 1 / Math.sqrt(fx*fx + fy*fy + fz*fz);
+  rlf = 1 / Math.sqrt(fx * fx + fy * fy + fz * fz);
   fx *= rlf;
   fy *= rlf;
   fz *= rlf;
@@ -368,7 +347,7 @@ CS336Object.prototype.lookAt = function(x, y, z)
   sz = fx * upY - fy * upX;
 
   // Normalize s.
-  rls = 1 / Math.sqrt(sx*sx + sy*sy + sz*sz);
+  rls = 1 / Math.sqrt(sx * sx + sy * sy + sz * sz);
   sx *= rls;
   sy *= rls;
   sz *= rls;
@@ -392,8 +371,6 @@ CS336Object.prototype.lookAt = function(x, y, z)
   this.rotation.elements[10] = -fz;
 
   this.matrixNeedsUpdate = true;
-
-
 };
 
 export default CS336Object;

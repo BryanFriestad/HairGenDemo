@@ -381,15 +381,15 @@ function startForReal(image) {
 
   // define an animation loop
   function animate() {
-    if(Math.random() > 0.08){
+    if (Math.random() > 0.08) {
       let rand_hair = Math.floor(Math.random() * 150);
       hairs[rand_hair].rebase(Math.random() * 8 - 4, 0, Math.random() * 8 - 4);
     }
     for (let i = 0; i < hairs.length; i++) {
       hairs[i].update(1.0 / 60.0);
     }
-    for(let i = 0; i < 15; i++){
-      for(let j = 0; j < constraints.length; j++){
+    for (let i = 0; i < 15; i++) {
+      for (let j = 0; j < constraints.length; j++) {
         constraints[j].solve();
       }
     }

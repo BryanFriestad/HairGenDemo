@@ -23,23 +23,32 @@ class HairStrand {
 
     for (let i = 0; i < this.num_control_vertices; i++) {
       let temp_x =
-        (i / (this.num_control_vertices - 1)) * normal_x * length + base_x;
+        i / (this.num_control_vertices - 1) * normal_x * length + base_x;
       let temp_y =
-        (i / (this.num_control_vertices - 1)) * normal_y * length + base_y;
+        i / (this.num_control_vertices - 1) * normal_y * length + base_y;
       let temp_z =
-        (i / (this.num_control_vertices - 1)) * normal_z * length + base_z;
+        i / (this.num_control_vertices - 1) * normal_z * length + base_z;
       //TODO: i just got thinking that there might be an issue here with the whole normal * length thing
-      if(i == 0){
-        this.verlet_parts.push(new VerletParticle(temp_x, temp_y, temp_z, true, 0.99));
-      }
-      else{
-        this.verlet_parts.push(new VerletParticle(temp_x, temp_y, temp_z, false, 0.99));
+      if (i == 0) {
+        this.verlet_parts.push(
+          new VerletParticle(temp_x, temp_y, temp_z, true, 0.99)
+        );
+      } else {
+        this.verlet_parts.push(
+          new VerletParticle(temp_x, temp_y, temp_z, false, 0.99)
+        );
       }
     }
 
     let dist = length / (this.num_control_vertices - 1);
-    for(let i = 0; i < this.verlet_parts.length - 1; i++){
-      constr_list.push(new DistanceConstraint(this.verlet_parts[i], this.verlet_parts[i+1], dist));
+    for (let i = 0; i < this.verlet_parts.length - 1; i++) {
+      constr_list.push(
+        new DistanceConstraint(
+          this.verlet_parts[i],
+          this.verlet_parts[i + 1],
+          dist
+        )
+      );
     }
 
     this.generateBezierControlVertices();
@@ -50,13 +59,13 @@ class HairStrand {
     return Math.random() * range - range / 2.0;
   }
 
-  rebase(x, y, z){
+  rebase(x, y, z) {
     this.verlet_parts[0].setPosition(x, y, z); //move the base particle to the position
   }
 
-  update(delta_t){
+  update(delta_t) {
     //update all verlet particles
-    for(let i = 0; i < this.num_control_vertices; i++){
+    for (let i = 0; i < this.num_control_vertices; i++) {
       this.verlet_parts[i].update(delta_t);
     }
     this.generateBezierControlVertices();
@@ -114,27 +123,15 @@ class HairStrand {
         let x3 = p3[0];
         let y3 = p3[1];
         let z3 = p3[2];
-        this.bezier_control_vertices.push(
-          (length_factor * (x1 - x3)) / 2.0 + x2
-        );
-        this.bezier_control_vertices.push(
-          (length_factor * (y1 - y3)) / 2.0 + y2
-        );
-        this.bezier_control_vertices.push(
-          (length_factor * (z1 - z3)) / 2.0 + z2
-        );
+        this.bezier_control_vertices.push(length_factor * (x1 - x3) / 2.0 + x2);
+        this.bezier_control_vertices.push(length_factor * (y1 - y3) / 2.0 + y2);
+        this.bezier_control_vertices.push(length_factor * (z1 - z3) / 2.0 + z2);
         this.bezier_control_vertices.push(x2);
         this.bezier_control_vertices.push(y2);
         this.bezier_control_vertices.push(z2);
-        this.bezier_control_vertices.push(
-          (length_factor * (x3 - x1)) / 2.0 + x2
-        );
-        this.bezier_control_vertices.push(
-          (length_factor * (y3 - y1)) / 2.0 + y2
-        );
-        this.bezier_control_vertices.push(
-          (length_factor * (z3 - z1)) / 2.0 + z2
-        );
+        this.bezier_control_vertices.push(length_factor * (x3 - x1) / 2.0 + x2);
+        this.bezier_control_vertices.push(length_factor * (y3 - y1) / 2.0 + y2);
+        this.bezier_control_vertices.push(length_factor * (z3 - z1) / 2.0 + z2);
       }
     }
     if (
