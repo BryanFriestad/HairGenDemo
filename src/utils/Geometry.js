@@ -1,3 +1,4 @@
+import { Matrix4 } from 'lib/cuon-matrix';
 // given an instance of THREE.Geometry, returns an object
 // containing raw data for vertices and normal vectors.
 export function getModelData(geom) {

@@ -1,3 +1,4 @@
+import { Matrix4 } from 'lib/cuon-matrix';
 import CS336Object from './CS336Object';
 import HairStrand from './Hair';
 import DistanceConstraint from './Constraint.js';

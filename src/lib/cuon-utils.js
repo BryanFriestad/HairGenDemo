@@ -1,12 +1,14 @@
+import WebGLDebugUtils from 'lib/webgl-debug';
+import WebGLUtils from 'lib/webgl-utils';
 // cuon-utils.js (c) 2012 kanda and matsuda
 /**
  * Create a program object and make current
  * @param gl GL context
  * @param vshader a vertex shader program (string)
  * @param fshader a fragment shader program (string)
- * @return true, if the program object was created and successfully made current 
+ * @return true, if the program object was created and successfully made current
  */
-function initShaders(gl, vshader, fshader) {
+export function initShaders(gl, vshader, fshader) {
   var program = createProgram(gl, vshader, fshader);
   if (!program) {
     console.log('Failed to create program');
@@ -26,7 +28,7 @@ function initShaders(gl, vshader, fshader) {
  * @param fshader a fragment shader program (string)
  * @return created program object, or null if the creation has failed
  */
-function createProgram(gl, vshader, fshader) {
+export function createProgram(gl, vshader, fshader) {
   // Create shader object
   var vertexShader = loadShader(gl, gl.VERTEX_SHADER, vshader);
   var fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fshader);
@@ -67,7 +69,7 @@ function createProgram(gl, vshader, fshader) {
  * @param source shader program (string)
  * @return created shader object, or null if the creation has failed.
  */
-function loadShader(gl, type, source) {
+export function loadShader(gl, type, source) {
   // Create shader object
   var shader = gl.createShader(type);
   if (shader == null) {
@@ -93,13 +95,13 @@ function loadShader(gl, type, source) {
   return shader;
 }
 
-/** 
+/**
  * Initialize and get the rendering for WebGL
  * @param canvas <cavnas> element
  * @param opt_debug flag to initialize the context for debugging
  * @return the rendering context for WebGL
  */
-function getWebGLContext(canvas, opt_debug) {
+export function getWebGLContext(canvas, opt_debug) {
   // Get the rendering context for WebGL
   var gl = WebGLUtils.setupWebGL(canvas);
   if (!gl) return null;

@@ -1,3 +1,4 @@
+import { Vector3 } from 'lib/cuon-matrix';
 //a particle to represent a point in a hair strand simulated using verlet integration
 class VerletParticle {
   constructor(base_x, base_y, base_z, anchored, damping) {

@@ -1,3 +1,6 @@
+import { Matrix4, Vector4 } from 'lib/cuon-matrix';
+import { getWebGLContext, initShaders } from 'lib/cuon-utils';
+
 import VerletParticle from 'utils/VerletParticle.js';
 import DistanceConstraint from 'utils/Constraint.js';
 import HairStrand from 'utils/Hair.js';
