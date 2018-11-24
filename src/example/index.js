@@ -1,17 +1,19 @@
 import VerletParticle from '../utils/VerletParticle.js';
 import DistanceConstraint from '../utils/Constraint.js';
 import HairStrand from '../utils/Hair.js';
-import CS336Object from '../utils/CS336Object.js';
+import HairyObject from '../utils/HairyObject.js';
 import * as THREE from 'three';
 import VSHADER_SOURCE from './vshader.glsl';
 import FSHADER_SOURCE from './fshader.glsl';
+import VSHADER_SOURCE_LIGHTING from './vshader_lighting.glsl';
+import FSHADER_SOURCE_LIGHTING from './fshader_lighting.glsl';
 import VSHADER_SOURCE_LINES from './vshader_lines.glsl';
 import FSHADER_SOURCE_LINES from './fshader_lines.glsl';
 import CheckerBoard from './check64.png';
 
-let theModel = getModelData(new THREE.CubeGeometry(1, 1, 1));
-let hairs = [];
-let constraints = [];
+// let theModel = getModelData(new THREE.SphereGeometry(1, 8, 8));
+let theModel = getModelData(new THREE.CubeGeometry());
+// let theModel = getModelData(new THREE.PlaneGeometry());
 
 const imageFilename = CheckerBoard;
 
@@ -99,19 +101,15 @@ function makeNormalMatrixElements(model, view) {
 // light and material properties, remember this is column major
 
 // generic white light
-const lightPropElements = new Float32Array([
-  0.2,
-  0.2,
-  0.2,
-  0.7,
-  0.7,
-  0.7,
-  0.7,
-  0.7,
-  0.7,
+var lightPropElements = new Float32Array([
+  ...[0.2, 0.2, 0.2],
+  ...[0.7, 0.7, 0.7],
+  ...[0.7, 0.7, 0.7],
 ]);
 
 //very fake looking white, useful for testing lights
+// light and material properties, remember this is column major
+
 const matPropElements = new Float32Array([1, 1, 1, 1, 1, 1, 1, 1, 1]);
 const shininess = 20.0;
 
@@ -130,6 +128,7 @@ let textureHandle;
 // handle to the compiled shader program on the GPU
 let shader;
 let line_shader;
+let lightingShader;
 
 // transformation matrices
 let model = new Matrix4();
@@ -154,6 +153,15 @@ let view = new Matrix4().setLookAt(
 ); // up vector - y axis
 
 let projection = new Matrix4().setPerspective(35, 1.5, 0.1, 1000);
+
+const cube = new HairyObject({
+  drawFunction: drawCube,
+  modelData: theModel,
+  drawHairFunction: drawHair,
+  hairDensity: 10,
+});
+const cubeScale = 2;
+cube.setScale(cubeScale, cubeScale, cubeScale);
 
 function getChar(event) {
   if (event.which == null) {
@@ -186,13 +194,11 @@ function handleKeyPress(event) {
 
 function render() {
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BIT);
-  //draw();
-  for (let i = 0; i < hairs.length; i++) {
-    hairs[i].render(new Matrix4());
-  }
+
+  cube.render();
 }
 
-function draw() {
+function drawCube(matrix = new Matrix4()) {
   gl.useProgram(shader);
 
   let positionIndex = gl.getAttribLocation(shader, 'a_Position');
@@ -226,7 +232,10 @@ function draw() {
   gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
   let loc = gl.getUniformLocation(shader, 'model');
-  let current = new Matrix4(model).multiply(modelScale);
+  let current = new Matrix4()
+    .multiply(matrix)
+    .multiply(model)
+    .multiply(modelScale);
   gl.uniformMatrix4fv(loc, false, current.elements);
   loc = gl.getUniformLocation(shader, 'view');
   gl.uniformMatrix4fv(loc, false, view.elements);
@@ -302,6 +311,16 @@ function startForReal(image) {
   line_shader = gl.program;
   gl.useProgram(null);
 
+  // load and compile the shader pair, using utility from the teal book
+  vshaderSource = VSHADER_SOURCE_LIGHTING;
+  fshaderSource = FSHADER_SOURCE_LIGHTING;
+  if (!initShaders(gl, vshaderSource, fshaderSource)) {
+    console.log('Failed to intialize shaders.');
+    return;
+  }
+  lightingShader = gl.program;
+  gl.useProgram(null);
+
   // buffer for vertex positions for triangles
   vertexBuffer = gl.createBuffer();
   if (!vertexBuffer) {
@@ -360,39 +379,9 @@ function startForReal(image) {
 
   gl.enable(gl.DEPTH_TEST);
 
-  for (let i = 0; i < 150; i++) {
-    let temp_x = Math.random() * 0.15;
-    let temp_z = Math.random() * 0.15;
-    let temp_y = Math.sqrt(1.0 - Math.pow(temp_x, 2) - Math.pow(temp_z, 2));
-    hairs.push(
-      new HairStrand(
-        4,
-        Math.random() * 4 - 2,
-        0,
-        Math.random() * 4 - 2,
-        temp_x,
-        temp_y,
-        temp_z,
-        drawHair,
-        constraints
-      )
-    );
-  }
-
   // define an animation loop
   function animate() {
-    if (Math.random() > 0.08) {
-      let rand_hair = Math.floor(Math.random() * 150);
-      hairs[rand_hair].rebase(Math.random() * 8 - 4, 0, Math.random() * 8 - 4);
-    }
-    for (let i = 0; i < hairs.length; i++) {
-      hairs[i].update(1.0 / 60.0);
-    }
-    for (let i = 0; i < 15; i++) {
-      for (let j = 0; j < constraints.length; j++) {
-        constraints[j].solve();
-      }
-    }
+    cube.update(1.0 / 60.0);
     render();
 
     let increment = 0.5;
@@ -419,7 +408,7 @@ function startForReal(image) {
   animate();
 }
 
-function drawHair() {
+function drawHair(matrix = new Matrix4()) {
   gl.useProgram(line_shader);
 
   let positionIndex = gl.getAttribLocation(line_shader, 'a_Position');
@@ -435,7 +424,10 @@ function drawHair() {
   gl.vertexAttribPointer(positionIndex, 3, gl.FLOAT, false, 0, 0);
 
   let loc = gl.getUniformLocation(line_shader, 'model');
-  let current = new Matrix4(model).multiply(modelScale);
+  let current = new Matrix4()
+    .multiply(matrix)
+    .multiply(model)
+    .multiply(modelScale);
   gl.uniformMatrix4fv(loc, false, current.elements);
   loc = gl.getUniformLocation(line_shader, 'view');
   gl.uniformMatrix4fv(loc, false, view.elements);
