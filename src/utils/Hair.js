@@ -1,3 +1,6 @@
+import VerletParticle from './VerletParticle.js';
+import DistanceConstraint from '../utils/Constraint.js';
+
 class HairStrand {
   constructor(
     length,
@@ -7,12 +10,13 @@ class HairStrand {
     normal_x,
     normal_y,
     normal_z,
-    drawFunction
+    drawFunction,
+    constr_list
   ) {
     //we are assuming that normal has already been normalized to one unit
     //additionally, one unit on the normal is one unit on the length
     this.num_control_vertices = 8; //this will create n-1 control hair segments
-    this.control_vertices = [];
+    this.verlet_parts = [];
     this.bezier_control_vertices = [];
     this.final_vertices;
     this.draw = drawFunction || function() {};
@@ -24,9 +28,18 @@ class HairStrand {
         (i / (this.num_control_vertices - 1)) * normal_y * length + base_y;
       let temp_z =
         (i / (this.num_control_vertices - 1)) * normal_z * length + base_z;
-      this.control_vertices.push(temp_x);
-      this.control_vertices.push(temp_y);
-      this.control_vertices.push(temp_z);
+      //TODO: i just got thinking that there might be an issue here with the whole normal * length thing
+      if(i == 0){
+        this.verlet_parts.push(new VerletParticle(temp_x, temp_y, temp_z, true, 0.99));
+      }
+      else{
+        this.verlet_parts.push(new VerletParticle(temp_x, temp_y, temp_z, false, 0.99));
+      }
+    }
+
+    let dist = length / (this.num_control_vertices - 1);
+    for(let i = 0; i < this.verlet_parts.length - 1; i++){
+      constr_list.push(new DistanceConstraint(this.verlet_parts[i], this.verlet_parts[i+1], dist));
     }
 
     this.generateBezierControlVertices();
@@ -37,14 +50,20 @@ class HairStrand {
     return Math.random() * range - range / 2.0;
   }
 
-  render(matrixWorld) {
-    //make them wiggle a little bit for fun
-    for (let i = 0; i < this.control_vertices.length / 3; i++) {
-      this.control_vertices[3 * i] += this.getRandomWiggle(0.006);
-      this.control_vertices[3 * i + 2] += this.getRandomWiggle(0.006);
+  rebase(x, y, z){
+    this.verlet_parts[0].setPosition(x, y, z); //move the base particle to the position
+  }
+
+  update(delta_t){
+    //update all verlet particles
+    for(let i = 0; i < this.num_control_vertices; i++){
+      this.verlet_parts[i].update(delta_t);
     }
     this.generateBezierControlVertices();
     this.final_vertices = this.generateFinalVertices(8); //8 is the number of verts between each pair of control points
+  }
+
+  render(matrixWorld) {
     this.draw();
   }
 
@@ -53,12 +72,14 @@ class HairStrand {
     let length_factor = 1.0 / 3.0; //best guess for how far the control verts strech along tangents
     for (let i = 0; i < this.num_control_vertices; i++) {
       if (i == 0) {
-        let x1 = this.control_vertices[3 * i];
-        let y1 = this.control_vertices[3 * i + 1];
-        let z1 = this.control_vertices[3 * i + 2];
-        let x2 = this.control_vertices[3 * (i + 1)];
-        let y2 = this.control_vertices[3 * (i + 1) + 1];
-        let z2 = this.control_vertices[3 * (i + 1) + 2];
+        let p1 = this.verlet_parts[i].position.elements;
+        let p2 = this.verlet_parts[i + 1].position.elements;
+        let x1 = p1[0];
+        let y1 = p1[1];
+        let z1 = p1[2];
+        let x2 = p2[0];
+        let y2 = p2[1];
+        let z2 = p2[2];
         this.bezier_control_vertices.push(x1);
         this.bezier_control_vertices.push(y1);
         this.bezier_control_vertices.push(z1);
@@ -66,12 +87,14 @@ class HairStrand {
         this.bezier_control_vertices.push(length_factor * (y2 - y1) + y1);
         this.bezier_control_vertices.push(length_factor * (z2 - z1) + z1);
       } else if (i == this.num_control_vertices - 1) {
-        let x1 = this.control_vertices[3 * (i - 1)];
-        let y1 = this.control_vertices[3 * (i - 1) + 1];
-        let z1 = this.control_vertices[3 * (i - 1) + 2];
-        let x2 = this.control_vertices[3 * i];
-        let y2 = this.control_vertices[3 * i + 1];
-        let z2 = this.control_vertices[3 * i + 2];
+        let p1 = this.verlet_parts[i - 1].position.elements;
+        let p2 = this.verlet_parts[i].position.elements;
+        let x1 = p1[0];
+        let y1 = p1[1];
+        let z1 = p1[2];
+        let x2 = p2[0];
+        let y2 = p2[1];
+        let z2 = p2[2];
         this.bezier_control_vertices.push(length_factor * (x1 - x2) + x2);
         this.bezier_control_vertices.push(length_factor * (y1 - y2) + y2);
         this.bezier_control_vertices.push(length_factor * (z1 - z2) + z2);
@@ -79,15 +102,18 @@ class HairStrand {
         this.bezier_control_vertices.push(y2);
         this.bezier_control_vertices.push(z2);
       } else {
-        let x1 = this.control_vertices[3 * (i - 1)];
-        let y1 = this.control_vertices[3 * (i - 1) + 1];
-        let z1 = this.control_vertices[3 * (i - 1) + 2];
-        let x2 = this.control_vertices[3 * i];
-        let y2 = this.control_vertices[3 * i + 1];
-        let z2 = this.control_vertices[3 * i + 2];
-        let x3 = this.control_vertices[3 * (i + 1)];
-        let y3 = this.control_vertices[3 * (i + 1) + 1];
-        let z3 = this.control_vertices[3 * (i + 1) + 2];
+        let p1 = this.verlet_parts[i - 1].position.elements;
+        let p2 = this.verlet_parts[i].position.elements;
+        let p3 = this.verlet_parts[i + 1].position.elements;
+        let x1 = p1[0];
+        let y1 = p1[1];
+        let z1 = p1[2];
+        let x2 = p2[0];
+        let y2 = p2[1];
+        let z2 = p2[2];
+        let x3 = p3[0];
+        let y3 = p3[1];
+        let z3 = p3[2];
         this.bezier_control_vertices.push(
           (length_factor * (x1 - x3)) / 2.0 + x2
         );
@@ -113,7 +139,7 @@ class HairStrand {
     }
     if (
       this.bezier_control_vertices.length !=
-      3 * (this.control_vertices.length - 6) + 12
+      3 * (3 * this.num_control_vertices - 6) + 12
     ) {
       console.log(
         'Warning: something is wrong in generateBezierControlVertices'
@@ -123,7 +149,7 @@ class HairStrand {
           this.bezier_control_vertices.length
       );
       console.log(
-        'should be: ' + (3 * (this.control_vertices.length - 6) + 12)
+        'should be: ' + (3 * (3 * this.num_control_vertices - 6) + 12)
       );
     }
   }

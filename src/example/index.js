@@ -1,3 +1,5 @@
+import VerletParticle from '../utils/VerletParticle.js';
+import DistanceConstraint from '../utils/Constraint.js';
 import HairStrand from '../utils/Hair.js';
 import CS336Object from '../utils/CS336Object.js';
 import * as THREE from 'three';
@@ -9,6 +11,7 @@ import CheckerBoard from './check64.png';
 
 let theModel = getModelData(new THREE.CubeGeometry(1, 1, 1));
 let hairs = [];
+let constraints = [];
 
 const imageFilename = CheckerBoard;
 
@@ -139,9 +142,9 @@ let lightPosition = new Vector4([-4, 4, 4, 1]);
 
 //view matrix
 let view = new Matrix4().setLookAt(
-  7,
-  2,
-  7, // eye
+  10,
+  5,
+  10, // eye
   0,
   0,
   0, // at - looking at the origin
@@ -357,26 +360,39 @@ function startForReal(image) {
 
   gl.enable(gl.DEPTH_TEST);
 
-  for (let i = 0; i < 50; i++) {
-    let temp_x = Math.random() * 0.1;
-    let temp_z = Math.random() * 0.1;
+  for (let i = 0; i < 150; i++) {
+    let temp_x = Math.random() * 0.15;
+    let temp_z = Math.random() * 0.15;
     let temp_y = Math.sqrt(1.0 - Math.pow(temp_x, 2) - Math.pow(temp_z, 2));
     hairs.push(
       new HairStrand(
-        2,
+        4,
         Math.random() * 4 - 2,
         0,
         Math.random() * 4 - 2,
         temp_x,
         temp_y,
         temp_z,
-        drawHair
+        drawHair,
+        constraints
       )
     );
   }
 
   // define an animation loop
   function animate() {
+    if(Math.random() > 0.08){
+      let rand_hair = Math.floor(Math.random() * 150);
+      hairs[rand_hair].rebase(Math.random() * 8 - 4, 0, Math.random() * 8 - 4);
+    }
+    for (let i = 0; i < hairs.length; i++) {
+      hairs[i].update(1.0 / 60.0);
+    }
+    for(let i = 0; i < 15; i++){
+      for(let j = 0; j < constraints.length; j++){
+        constraints[j].solve();
+      }
+    }
     render();
 
     let increment = 0.5;
