@@ -1,21 +1,24 @@
 class HairStrand {
-  constructor(
-    length,
-    base_x,
-    base_y,
-    base_z,
-    normal_x,
-    normal_y,
-    normal_z,
-    drawFunction
-  ) {
+  constructor({
+    length = 1,
+    base = [0, 0, 0],
+    normal = [1, 1, 1],
+    drawFunction = () => {},
+    res = 8,
+  }) {
+    this.length = length;
+    const [base_x, base_y, base_z] = base;
+    this.base = base;
+    const [normal_x, normal_y, normal_z] = normal;
+    this.normal = normal;
+    // console.log({ base, normal });
     //we are assuming that normal has already been normalized to one unit
     //additionally, one unit on the normal is one unit on the length
-    this.num_control_vertices = 8; //this will create n-1 control hair segments
+    this.num_control_vertices = res; //this will create n-1 control hair segments
     this.control_vertices = [];
     this.bezier_control_vertices = [];
     this.final_vertices;
-    this.draw = drawFunction || function() {};
+    this.draw = drawFunction;
 
     for (let i = 0; i < this.num_control_vertices; i++) {
       let temp_x =
@@ -30,7 +33,7 @@ class HairStrand {
     }
 
     this.generateBezierControlVertices();
-    this.final_vertices = this.generateFinalVertices(8); //8 is the number of verts between each pair of control points
+    this.final_vertices = this.generateFinalVertices(this.num_control_vertices); //8 is the number of verts between each pair of control points
   }
 
   getRandomWiggle(range) {
@@ -44,7 +47,7 @@ class HairStrand {
       this.control_vertices[3 * i + 2] += this.getRandomWiggle(0.006);
     }
     this.generateBezierControlVertices();
-    this.final_vertices = this.generateFinalVertices(8); //8 is the number of verts between each pair of control points
+    this.final_vertices = this.generateFinalVertices(this.num_control_vertices); //8 is the number of verts between each pair of control points
 
     const currentWorld = new Matrix4(matrixWorld);
     this.draw(currentWorld);
