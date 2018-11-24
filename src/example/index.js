@@ -1,8 +1,11 @@
-import VerletParticle from '../utils/VerletParticle.js';
-import DistanceConstraint from '../utils/Constraint.js';
-import HairStrand from '../utils/Hair.js';
-import HairyObject from '../utils/HairyObject.js';
+import VerletParticle from 'utils/VerletParticle.js';
+import DistanceConstraint from 'utils/Constraint.js';
+import HairStrand from 'utils/Hair.js';
+import HairyObject from 'utils/HairyObject.js';
+import { getModelData, makeNormalMatrixElements } from 'utils/Geometry';
+
 import * as THREE from 'three';
+
 import VSHADER_SOURCE from './vshader.glsl';
 import FSHADER_SOURCE from './fshader.glsl';
 import VSHADER_SOURCE_LINES from './vshader_lines.glsl';
@@ -14,87 +17,6 @@ let theModel = getModelData(new THREE.CubeGeometry());
 // let theModel = getModelData(new THREE.PlaneGeometry());
 
 const imageFilename = CheckerBoard;
-
-// given an instance of THREE.Geometry, returns an object
-// containing raw data for vertices and normal vectors.
-function getModelData(geom) {
-  let verticesArray = [];
-  let normalsArray = [];
-  let vertexNormalsArray = [];
-  let reflectedNormalsArray = [];
-  let count = 0;
-  for (let f = 0; f < geom.faces.length; ++f) {
-    let face = geom.faces[f];
-    let v = geom.vertices[face.a];
-    verticesArray.push(v.x);
-    verticesArray.push(v.y);
-    verticesArray.push(v.z);
-
-    v = geom.vertices[face.b];
-    verticesArray.push(v.x);
-    verticesArray.push(v.y);
-    verticesArray.push(v.z);
-
-    v = geom.vertices[face.c];
-    verticesArray.push(v.x);
-    verticesArray.push(v.y);
-    verticesArray.push(v.z);
-    count += 3;
-
-    let fn = face.normal;
-    for (let i = 0; i < 3; ++i) {
-      normalsArray.push(fn.x);
-      normalsArray.push(fn.y);
-      normalsArray.push(fn.z);
-    }
-
-    for (let i = 0; i < 3; ++i) {
-      let vn = face.vertexNormals[i];
-      vertexNormalsArray.push(vn.x);
-      vertexNormalsArray.push(vn.y);
-      vertexNormalsArray.push(vn.z);
-    }
-  }
-
-  // texture coords
-  //each element is an array of three Vector2
-  let uvs = geom.faceVertexUvs[0];
-  let texCoordArray = [];
-  for (let a = 0; a < uvs.length; ++a) {
-    for (let i = 0; i < 3; ++i) {
-      let uv = uvs[a][i];
-      texCoordArray.push(uv.x);
-      texCoordArray.push(uv.y);
-    }
-  }
-
-  return {
-    numVertices: count,
-    vertices: new Float32Array(verticesArray),
-    normals: new Float32Array(normalsArray),
-    vertexNormals: new Float32Array(vertexNormalsArray),
-    reflectedNormals: new Float32Array(reflectedNormalsArray),
-    texCoords: new Float32Array(texCoordArray),
-  };
-}
-
-function makeNormalMatrixElements(model, view) {
-  let n = new Matrix4(view).multiply(model);
-  n.transpose();
-  n.invert();
-  n = n.elements;
-  return new Float32Array([
-    n[0],
-    n[1],
-    n[2],
-    n[4],
-    n[5],
-    n[6],
-    n[8],
-    n[9],
-    n[10],
-  ]);
-}
 
 // light and material properties, remember this is column major
 
@@ -193,76 +115,6 @@ function render() {
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BIT);
 
   cube.render();
-}
-
-function drawCube(matrix = new Matrix4()) {
-  gl.useProgram(shader);
-
-  let positionIndex = gl.getAttribLocation(shader, 'a_Position');
-  if (positionIndex < 0) {
-    console.log('Failed to get the storage location of a_Position');
-    return;
-  }
-
-  let normalIndex = gl.getAttribLocation(shader, 'a_Normal');
-  if (normalIndex < 0) {
-    console.log('Failed to get the storage location of a_Normal');
-    return;
-  }
-
-  let texCoordIndex = gl.getAttribLocation(shader, 'a_TexCoord');
-  if (texCoordIndex < 0) {
-    console.log('Failed to get the storage location of a_TexCoord');
-    return;
-  }
-
-  gl.enableVertexAttribArray(positionIndex);
-  gl.enableVertexAttribArray(normalIndex);
-  gl.enableVertexAttribArray(texCoordIndex);
-
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-  gl.vertexAttribPointer(positionIndex, 3, gl.FLOAT, false, 0, 0);
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertexNormalBuffer);
-  gl.vertexAttribPointer(normalIndex, 3, gl.FLOAT, false, 0, 0);
-  gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
-  gl.vertexAttribPointer(texCoordIndex, 2, gl.FLOAT, false, 0, 0);
-  gl.bindBuffer(gl.ARRAY_BUFFER, null);
-
-  let loc = gl.getUniformLocation(shader, 'model');
-  let current = new Matrix4()
-    .multiply(matrix)
-    .multiply(model)
-    .multiply(modelScale);
-  gl.uniformMatrix4fv(loc, false, current.elements);
-  loc = gl.getUniformLocation(shader, 'view');
-  gl.uniformMatrix4fv(loc, false, view.elements);
-  loc = gl.getUniformLocation(shader, 'projection');
-  gl.uniformMatrix4fv(loc, false, projection.elements);
-  loc = gl.getUniformLocation(shader, 'normalMatrix');
-  gl.uniformMatrix3fv(loc, false, makeNormalMatrixElements(model, view));
-
-  loc = gl.getUniformLocation(shader, 'lightPosition');
-  gl.uniform4fv(loc, lightPosition.elements);
-
-  loc = gl.getUniformLocation(shader, 'lightProperties');
-  gl.uniformMatrix3fv(loc, false, lightPropElements);
-  loc = gl.getUniformLocation(shader, 'materialProperties');
-  gl.uniformMatrix3fv(loc, false, matPropElements);
-  loc = gl.getUniformLocation(shader, 'shininess');
-  gl.uniform1f(loc, shininess);
-
-  let textureUnit = 1;
-  gl.activeTexture(gl.TEXTURE0 + textureUnit);
-  gl.bindTexture(gl.TEXTURE_2D, textureHandle);
-  loc = gl.getUniformLocation(shader, 'sampler');
-  gl.uniform1i(loc, textureUnit);
-
-  gl.drawArrays(gl.TRIANGLES, 0, theModel.numVertices);
-
-  gl.disableVertexAttribArray(normalIndex);
-  gl.disableVertexAttribArray(positionIndex);
-  gl.disableVertexAttribArray(texCoordIndex);
-  gl.useProgram(null);
 }
 
 //entry point when page is loaded.  Wait for image to load before proceeding
@@ -366,9 +218,16 @@ function startForReal(image) {
 
   gl.enable(gl.DEPTH_TEST);
 
+  let lastCalledTime;
+
   // define an animation loop
-  function animate() {
-    cube.update(1.0 / 60.0);
+  function animate(timestamp) {
+    // calculate duration since last animation frame
+    if (!lastCalledTime) lastCalledTime = new Date().getTime();
+    let delta = (new Date().getTime() - lastCalledTime) / 1000;
+    lastCalledTime = new Date().getTime();
+
+    cube.update(delta);
     render();
 
     let increment = 0.5;
@@ -393,6 +252,76 @@ function startForReal(image) {
   }
 
   animate();
+}
+
+function drawCube(matrix = new Matrix4()) {
+  gl.useProgram(shader);
+
+  let positionIndex = gl.getAttribLocation(shader, 'a_Position');
+  if (positionIndex < 0) {
+    console.log('Failed to get the storage location of a_Position');
+    return;
+  }
+
+  let normalIndex = gl.getAttribLocation(shader, 'a_Normal');
+  if (normalIndex < 0) {
+    console.log('Failed to get the storage location of a_Normal');
+    return;
+  }
+
+  let texCoordIndex = gl.getAttribLocation(shader, 'a_TexCoord');
+  if (texCoordIndex < 0) {
+    console.log('Failed to get the storage location of a_TexCoord');
+    return;
+  }
+
+  gl.enableVertexAttribArray(positionIndex);
+  gl.enableVertexAttribArray(normalIndex);
+  gl.enableVertexAttribArray(texCoordIndex);
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+  gl.vertexAttribPointer(positionIndex, 3, gl.FLOAT, false, 0, 0);
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertexNormalBuffer);
+  gl.vertexAttribPointer(normalIndex, 3, gl.FLOAT, false, 0, 0);
+  gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+  gl.vertexAttribPointer(texCoordIndex, 2, gl.FLOAT, false, 0, 0);
+  gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+  let loc = gl.getUniformLocation(shader, 'model');
+  let current = new Matrix4()
+    .multiply(matrix)
+    .multiply(model)
+    .multiply(modelScale);
+  gl.uniformMatrix4fv(loc, false, current.elements);
+  loc = gl.getUniformLocation(shader, 'view');
+  gl.uniformMatrix4fv(loc, false, view.elements);
+  loc = gl.getUniformLocation(shader, 'projection');
+  gl.uniformMatrix4fv(loc, false, projection.elements);
+  loc = gl.getUniformLocation(shader, 'normalMatrix');
+  gl.uniformMatrix3fv(loc, false, makeNormalMatrixElements(model, view));
+
+  loc = gl.getUniformLocation(shader, 'lightPosition');
+  gl.uniform4fv(loc, lightPosition.elements);
+
+  loc = gl.getUniformLocation(shader, 'lightProperties');
+  gl.uniformMatrix3fv(loc, false, lightPropElements);
+  loc = gl.getUniformLocation(shader, 'materialProperties');
+  gl.uniformMatrix3fv(loc, false, matPropElements);
+  loc = gl.getUniformLocation(shader, 'shininess');
+  gl.uniform1f(loc, shininess);
+
+  let textureUnit = 1;
+  gl.activeTexture(gl.TEXTURE0 + textureUnit);
+  gl.bindTexture(gl.TEXTURE_2D, textureHandle);
+  loc = gl.getUniformLocation(shader, 'sampler');
+  gl.uniform1i(loc, textureUnit);
+
+  gl.drawArrays(gl.TRIANGLES, 0, theModel.numVertices);
+
+  gl.disableVertexAttribArray(normalIndex);
+  gl.disableVertexAttribArray(positionIndex);
+  gl.disableVertexAttribArray(texCoordIndex);
+  gl.useProgram(null);
 }
 
 function drawHair(matrix = new Matrix4()) {
