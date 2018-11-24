@@ -1,12 +1,14 @@
 import CS336Object from './CS336Object';
 import HairStrand from './Hair';
+import ChildHair from './ChildHair';
 
 export default class HairyObject extends CS336Object {
-  constructor(
+  constructor({
     drawFunction = () => {},
     modelData = {},
-    drawHairFunction = () => {}
-  ) {
+    drawHairFunction = () => {},
+    hairDensity = 0,
+  }) {
     super(drawFunction);
     const {
       numVertices,
@@ -17,6 +19,21 @@ export default class HairyObject extends CS336Object {
       texCoords,
     } = modelData;
     this.hairs = [];
+    this.res = 3; // set at 3 for now to improve render times
+    this.drawHairFunction = drawHairFunction;
+
+    this.generateHairs({
+      numVertices,
+      vertices,
+      normals,
+      vertexNormals,
+      drawHairFunction,
+    });
+    this.generateChildHairs({ hairDensity, vertices });
+  }
+
+  // hashmap the vertices to aggregate the vertex pairs
+  generateHairs({ numVertices, vertices, normals, vertexNormals }) {
     let vertexMap = {};
     for (let i = 0; i < numVertices; i++) {
       let [a, b, c] = vertices.slice(3 * i, 3 * i + 3);
@@ -27,12 +44,14 @@ export default class HairyObject extends CS336Object {
         ? vertexMap[key].v_normals || []
         : [];
       vertexMap[key] = {
-        v_bases: [a, b, c],
+        v_base: [a, b, c],
         v_normals: [...existingNormals, abcNormals],
       };
     }
 
-    Object.values(vertexMap).forEach(({ v_bases, v_normals }) => {
+    // keep track of hair strand at each vertex for efficient lookup for child hairs
+    this.hairMap = {};
+    Object.values(vertexMap).forEach(({ v_base, v_normals }) => {
       let avgNormal = new Array(3).fill(0);
 
       // sum normals
@@ -53,14 +72,43 @@ export default class HairyObject extends CS336Object {
         avgNormal[2] / norm,
       ];
 
-      this.hairs.push(
-        new HairStrand(1, ...v_bases, ...avgNormal, drawHairFunction)
-      );
+      const hairStrand = new HairStrand({
+        base: v_base,
+        normal: avgNormal,
+        drawFunction: this.drawHairFunction,
+        res: this.res,
+      });
+      this.hairs.push(hairStrand);
+      this.hairMap[this.vertexToKey(v_base)] = hairStrand;
     });
+  }
 
-    // this.hairs.push(
-    //   new HairStrand(1, a, b, c, a_n, b_n, c_n, drawHairFunction)
-    // );
+  generateChildHairs({ hairDensity, vertices }) {
+    if (!hairDensity) return;
+    for (let i = 0; i < vertices.length; i += 9) {
+      let p1 = vertices.slice(i, i + 3);
+      let p2 = vertices.slice(i + 3, i + 6);
+      let p3 = vertices.slice(i + 6, i + 9);
+
+      const parents = [
+        this.hairMap[this.vertexToKey(p1)],
+        this.hairMap[this.vertexToKey(p2)],
+        this.hairMap[this.vertexToKey(p3)],
+      ];
+
+      for (let j = 0; j < hairDensity; j++) {
+        this.hairs.push(
+          new ChildHair(parents, {
+            drawFunction: this.drawHairFunction,
+            res: this.res,
+          })
+        );
+      }
+    }
+  }
+
+  vertexToKey([a, b, c]) {
+    return `${a},${b},${c}`;
   }
 
   render(matrixWorld) {

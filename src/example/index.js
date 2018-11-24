@@ -9,7 +9,9 @@ import VSHADER_SOURCE_LINES from './vshader_lines.glsl';
 import FSHADER_SOURCE_LINES from './fshader_lines.glsl';
 import CheckerBoard from './check64.png';
 
-let theModel = getModelData(new THREE.SphereGeometry(1, 16, 16));
+// let theModel = getModelData(new THREE.SphereGeometry(1, 8, 8));
+let theModel = getModelData(new THREE.CubeGeometry());
+// let theModel = getModelData(new THREE.PlaneGeometry());
 let hairs = [];
 
 const imageFilename = CheckerBoard;
@@ -151,7 +153,12 @@ let view = new Matrix4().setLookAt(
 
 let projection = new Matrix4().setPerspective(35, 1.5, 0.1, 1000);
 
-const cube = new HairyObject(drawCube, theModel, drawHair);
+const cube = new HairyObject({
+  drawFunction: drawCube,
+  modelData: theModel,
+  drawHairFunction: drawHair,
+  hairDensity: 10,
+});
 cube.setScale(1.5, 1.5, 1.5);
 
 function getChar(event) {
@@ -369,24 +376,6 @@ function startForReal(image) {
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
   gl.enable(gl.DEPTH_TEST);
-
-  for (let i = 0; i < 50; i++) {
-    let temp_x = Math.random() * 0.1;
-    let temp_z = Math.random() * 0.1;
-    let temp_y = Math.sqrt(1.0 - Math.pow(temp_x, 2) - Math.pow(temp_z, 2));
-    hairs.push(
-      new HairStrand(
-        2,
-        Math.random() * 4 - 2,
-        0,
-        Math.random() * 4 - 2,
-        temp_x,
-        temp_y,
-        temp_z,
-        drawHair
-      )
-    );
-  }
 
   // define an animation loop
   function animate() {
