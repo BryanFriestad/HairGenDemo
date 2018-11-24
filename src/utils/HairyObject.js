@@ -1,3 +1,4 @@
+import { Matrix4 } from 'lib/cuon-matrix';
 import CS336Object from './CS336Object';
 import HairStrand from './Hair';
 import DistanceConstraint from './Constraint.js';
@@ -125,12 +126,12 @@ export default class HairyObject extends CS336Object {
     //   );
     // }
     for (let i = 0; i < this.hairs.length; i++) {
+      this.hairs[i].update(delta_t);
+    }
+    for (let i = 0; i < this.hairs.length; i++) {
       for (let j = 0; j < this.constraints.length; j++) {
         this.constraints[j].solve();
       }
-    }
-    for (let i = 0; i < this.hairs.length; i++) {
-      this.hairs[i].update(delta_t);
     }
   }
 

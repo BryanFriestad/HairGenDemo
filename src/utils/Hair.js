@@ -1,5 +1,6 @@
+import { Vector3, Matrix4 } from 'lib/cuon-matrix';
 import VerletParticle from './VerletParticle.js';
-import DistanceConstraint from '../utils/Constraint.js';
+import DistanceConstraint from 'utils/Constraint.js';
 
 class HairStrand {
   constructor({
@@ -26,11 +27,11 @@ class HairStrand {
 
     for (let i = 0; i < this.num_control_vertices; i++) {
       let temp_x =
-        i / (this.num_control_vertices - 1) * normal_x * length + base_x;
+        (i / (this.num_control_vertices - 1)) * normal_x * length + base_x;
       let temp_y =
-        i / (this.num_control_vertices - 1) * normal_y * length + base_y;
+        (i / (this.num_control_vertices - 1)) * normal_y * length + base_y;
       let temp_z =
-        i / (this.num_control_vertices - 1) * normal_z * length + base_z;
+        (i / (this.num_control_vertices - 1)) * normal_z * length + base_z;
       //TODO: i just got thinking that there might be an issue here with the whole normal * length thing
       if (i == 0) {
         this.verlet_parts.push(
@@ -127,15 +128,27 @@ class HairStrand {
         let x3 = p3[0];
         let y3 = p3[1];
         let z3 = p3[2];
-        this.bezier_control_vertices.push(length_factor * (x1 - x3) / 2.0 + x2);
-        this.bezier_control_vertices.push(length_factor * (y1 - y3) / 2.0 + y2);
-        this.bezier_control_vertices.push(length_factor * (z1 - z3) / 2.0 + z2);
+        this.bezier_control_vertices.push(
+          (length_factor * (x1 - x3)) / 2.0 + x2
+        );
+        this.bezier_control_vertices.push(
+          (length_factor * (y1 - y3)) / 2.0 + y2
+        );
+        this.bezier_control_vertices.push(
+          (length_factor * (z1 - z3)) / 2.0 + z2
+        );
         this.bezier_control_vertices.push(x2);
         this.bezier_control_vertices.push(y2);
         this.bezier_control_vertices.push(z2);
-        this.bezier_control_vertices.push(length_factor * (x3 - x1) / 2.0 + x2);
-        this.bezier_control_vertices.push(length_factor * (y3 - y1) / 2.0 + y2);
-        this.bezier_control_vertices.push(length_factor * (z3 - z1) / 2.0 + z2);
+        this.bezier_control_vertices.push(
+          (length_factor * (x3 - x1)) / 2.0 + x2
+        );
+        this.bezier_control_vertices.push(
+          (length_factor * (y3 - y1)) / 2.0 + y2
+        );
+        this.bezier_control_vertices.push(
+          (length_factor * (z3 - z1)) / 2.0 + z2
+        );
       }
     }
     if (

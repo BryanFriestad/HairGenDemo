@@ -1,12 +1,16 @@
-import VerletParticle from '../utils/VerletParticle.js';
-import DistanceConstraint from '../utils/Constraint.js';
-import HairStrand from '../utils/Hair.js';
-import HairyObject from '../utils/HairyObject.js';
+import { Matrix4, Vector4 } from 'lib/cuon-matrix';
+import { getWebGLContext, initShaders } from 'lib/cuon-utils';
+
+import VerletParticle from 'utils/VerletParticle.js';
+import DistanceConstraint from 'utils/Constraint.js';
+import HairStrand from 'utils/Hair.js';
+import HairyObject from 'utils/HairyObject.js';
+import { getModelData, makeNormalMatrixElements } from 'utils/Geometry';
+
 import * as THREE from 'three';
+
 import VSHADER_SOURCE from './vshader.glsl';
 import FSHADER_SOURCE from './fshader.glsl';
-import VSHADER_SOURCE_LIGHTING from './vshader_lighting.glsl';
-import FSHADER_SOURCE_LIGHTING from './fshader_lighting.glsl';
 import VSHADER_SOURCE_LINES from './vshader_lines.glsl';
 import FSHADER_SOURCE_LINES from './fshader_lines.glsl';
 import CheckerBoard from './check64.png';
@@ -16,87 +20,6 @@ let theModel = getModelData(new THREE.CubeGeometry());
 // let theModel = getModelData(new THREE.PlaneGeometry());
 
 const imageFilename = CheckerBoard;
-
-// given an instance of THREE.Geometry, returns an object
-// containing raw data for vertices and normal vectors.
-function getModelData(geom) {
-  let verticesArray = [];
-  let normalsArray = [];
-  let vertexNormalsArray = [];
-  let reflectedNormalsArray = [];
-  let count = 0;
-  for (let f = 0; f < geom.faces.length; ++f) {
-    let face = geom.faces[f];
-    let v = geom.vertices[face.a];
-    verticesArray.push(v.x);
-    verticesArray.push(v.y);
-    verticesArray.push(v.z);
-
-    v = geom.vertices[face.b];
-    verticesArray.push(v.x);
-    verticesArray.push(v.y);
-    verticesArray.push(v.z);
-
-    v = geom.vertices[face.c];
-    verticesArray.push(v.x);
-    verticesArray.push(v.y);
-    verticesArray.push(v.z);
-    count += 3;
-
-    let fn = face.normal;
-    for (let i = 0; i < 3; ++i) {
-      normalsArray.push(fn.x);
-      normalsArray.push(fn.y);
-      normalsArray.push(fn.z);
-    }
-
-    for (let i = 0; i < 3; ++i) {
-      let vn = face.vertexNormals[i];
-      vertexNormalsArray.push(vn.x);
-      vertexNormalsArray.push(vn.y);
-      vertexNormalsArray.push(vn.z);
-    }
-  }
-
-  // texture coords
-  //each element is an array of three Vector2
-  let uvs = geom.faceVertexUvs[0];
-  let texCoordArray = [];
-  for (let a = 0; a < uvs.length; ++a) {
-    for (let i = 0; i < 3; ++i) {
-      let uv = uvs[a][i];
-      texCoordArray.push(uv.x);
-      texCoordArray.push(uv.y);
-    }
-  }
-
-  return {
-    numVertices: count,
-    vertices: new Float32Array(verticesArray),
-    normals: new Float32Array(normalsArray),
-    vertexNormals: new Float32Array(vertexNormalsArray),
-    reflectedNormals: new Float32Array(reflectedNormalsArray),
-    texCoords: new Float32Array(texCoordArray),
-  };
-}
-
-function makeNormalMatrixElements(model, view) {
-  let n = new Matrix4(view).multiply(model);
-  n.transpose();
-  n.invert();
-  n = n.elements;
-  return new Float32Array([
-    n[0],
-    n[1],
-    n[2],
-    n[4],
-    n[5],
-    n[6],
-    n[8],
-    n[9],
-    n[10],
-  ]);
-}
 
 // light and material properties, remember this is column major
 
@@ -128,7 +51,6 @@ let textureHandle;
 // handle to the compiled shader program on the GPU
 let shader;
 let line_shader;
-let lightingShader;
 
 // transformation matrices
 let model = new Matrix4();
@@ -196,6 +118,143 @@ function render() {
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BIT);
 
   cube.render();
+}
+
+//entry point when page is loaded.  Wait for image to load before proceeding
+function main() {
+  let image = new Image();
+  image.onload = function() {
+    // chain the next function
+    startForReal(image);
+  };
+
+  // starts loading the image asynchronously
+  image.src = imageFilename;
+}
+
+function startForReal(image) {
+  let canvas = document.getElementById('theCanvas');
+
+  window.onkeypress = handleKeyPress;
+
+  gl = getWebGLContext(canvas, false);
+  if (!gl) {
+    console.log('Failed to get the rendering context for WebGL');
+    return;
+  }
+
+  // load and compile the shader pair, using utility from the teal book
+  let vshaderSource = VSHADER_SOURCE;
+  let fshaderSource = FSHADER_SOURCE;
+  if (!initShaders(gl, vshaderSource, fshaderSource)) {
+    console.log('Failed to intialize shaders.');
+    return;
+  }
+  shader = gl.program;
+  gl.useProgram(null);
+
+  // load and compile the shader pair, using utility from the teal book
+  vshaderSource = VSHADER_SOURCE_LINES;
+  fshaderSource = FSHADER_SOURCE_LINES;
+  if (!initShaders(gl, vshaderSource, fshaderSource)) {
+    console.log('Failed to intialize shaders.');
+    return;
+  }
+  line_shader = gl.program;
+  gl.useProgram(null);
+
+  // buffer for vertex positions for triangles
+  vertexBuffer = gl.createBuffer();
+  if (!vertexBuffer) {
+    console.log('Failed to create the buffer object');
+    return;
+  }
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, theModel.vertices, gl.STATIC_DRAW);
+
+  hairVertexBuffer = gl.createBuffer();
+  if (!hairVertexBuffer) {
+    console.log('Failed to create the buffer object');
+    return;
+  }
+  gl.bindBuffer(gl.ARRAY_BUFFER, hairVertexBuffer);
+
+  // buffer for normals
+  vertexNormalBuffer = gl.createBuffer();
+  if (!vertexNormalBuffer) {
+    console.log('Failed to create the buffer object');
+    return;
+  }
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertexNormalBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, theModel.vertexNormals, gl.STATIC_DRAW);
+
+  // buffer for tex coords
+  texCoordBuffer = gl.createBuffer();
+  if (!texCoordBuffer) {
+    console.log('Failed to create the buffer object');
+    return;
+  }
+  gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, theModel.texCoords, gl.STATIC_DRAW);
+
+  // ask the GPU to create a texture object
+  textureHandle = gl.createTexture();
+
+  // choose a texture unit to use during setup, defaults to zero
+  // (can use a different one when drawing)
+  // max value is MAX_COMBINED_TEXTURE_IMAGE_UNITS
+  gl.activeTexture(gl.TEXTURE0);
+
+  // bind the texture
+  gl.bindTexture(gl.TEXTURE_2D, textureHandle);
+
+  // load the image bytes to the currently bound texture, flipping the vertical
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+
+  // texture parameters are stored with the texture
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+  // specify a fill color for clearing the framebuffer
+  gl.clearColor(0.0, 0.0, 0.0, 1.0);
+
+  gl.enable(gl.DEPTH_TEST);
+
+  let lastCalledTime;
+
+  // define an animation loop
+  function animate(timestamp) {
+    // calculate duration since last animation frame
+    if (!lastCalledTime) lastCalledTime = new Date().getTime();
+    let delta = (new Date().getTime() - lastCalledTime) / 1000;
+    lastCalledTime = new Date().getTime();
+
+    cube.update(delta);
+    render();
+
+    let increment = 0.5;
+    if (!paused) {
+      switch (axis) {
+        case 'x':
+          model = new Matrix4().setRotate(increment, 1, 0, 0).multiply(model);
+          axis = 'x';
+          break;
+        case 'y':
+          axis = 'y';
+          model = new Matrix4().setRotate(increment, 0, 1, 0).multiply(model);
+          break;
+        case 'z':
+          axis = 'z';
+          model = new Matrix4().setRotate(increment, 0, 0, 1).multiply(model);
+          break;
+        default:
+      }
+    }
+    requestAnimationFrame(animate, canvas);
+  }
+
+  animate();
 }
 
 function drawCube(matrix = new Matrix4()) {
@@ -266,146 +325,6 @@ function drawCube(matrix = new Matrix4()) {
   gl.disableVertexAttribArray(positionIndex);
   gl.disableVertexAttribArray(texCoordIndex);
   gl.useProgram(null);
-}
-
-//entry point when page is loaded.  Wait for image to load before proceeding
-function main() {
-  let image = new Image();
-  image.onload = function() {
-    // chain the next function
-    startForReal(image);
-  };
-
-  // starts loading the image asynchronously
-  image.src = imageFilename;
-}
-
-function startForReal(image) {
-  let canvas = document.getElementById('theCanvas');
-
-  window.onkeypress = handleKeyPress;
-
-  gl = getWebGLContext(canvas, false);
-  if (!gl) {
-    console.log('Failed to get the rendering context for WebGL');
-    return;
-  }
-
-  // load and compile the shader pair, using utility from the teal book
-  let vshaderSource = VSHADER_SOURCE;
-  let fshaderSource = FSHADER_SOURCE;
-  if (!initShaders(gl, vshaderSource, fshaderSource)) {
-    console.log('Failed to intialize shaders.');
-    return;
-  }
-  shader = gl.program;
-  gl.useProgram(null);
-
-  // load and compile the shader pair, using utility from the teal book
-  vshaderSource = VSHADER_SOURCE_LINES;
-  fshaderSource = FSHADER_SOURCE_LINES;
-  if (!initShaders(gl, vshaderSource, fshaderSource)) {
-    console.log('Failed to intialize shaders.');
-    return;
-  }
-  line_shader = gl.program;
-  gl.useProgram(null);
-
-  // load and compile the shader pair, using utility from the teal book
-  vshaderSource = VSHADER_SOURCE_LIGHTING;
-  fshaderSource = FSHADER_SOURCE_LIGHTING;
-  if (!initShaders(gl, vshaderSource, fshaderSource)) {
-    console.log('Failed to intialize shaders.');
-    return;
-  }
-  lightingShader = gl.program;
-  gl.useProgram(null);
-
-  // buffer for vertex positions for triangles
-  vertexBuffer = gl.createBuffer();
-  if (!vertexBuffer) {
-    console.log('Failed to create the buffer object');
-    return;
-  }
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, theModel.vertices, gl.STATIC_DRAW);
-
-  hairVertexBuffer = gl.createBuffer();
-  if (!hairVertexBuffer) {
-    console.log('Failed to create the buffer object');
-    return;
-  }
-  gl.bindBuffer(gl.ARRAY_BUFFER, hairVertexBuffer);
-
-  // buffer for normals
-  vertexNormalBuffer = gl.createBuffer();
-  if (!vertexNormalBuffer) {
-    console.log('Failed to create the buffer object');
-    return;
-  }
-  gl.bindBuffer(gl.ARRAY_BUFFER, vertexNormalBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, theModel.vertexNormals, gl.STATIC_DRAW);
-
-  // buffer for tex coords
-  texCoordBuffer = gl.createBuffer();
-  if (!texCoordBuffer) {
-    console.log('Failed to create the buffer object');
-    return;
-  }
-  gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, theModel.texCoords, gl.STATIC_DRAW);
-
-  // ask the GPU to create a texture object
-  textureHandle = gl.createTexture();
-
-  // choose a texture unit to use during setup, defaults to zero
-  // (can use a different one when drawing)
-  // max value is MAX_COMBINED_TEXTURE_IMAGE_UNITS
-  gl.activeTexture(gl.TEXTURE0);
-
-  // bind the texture
-  gl.bindTexture(gl.TEXTURE_2D, textureHandle);
-
-  // load the image bytes to the currently bound texture, flipping the vertical
-  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-
-  // texture parameters are stored with the texture
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-
-  // specify a fill color for clearing the framebuffer
-  gl.clearColor(0.0, 0.0, 0.0, 1.0);
-
-  gl.enable(gl.DEPTH_TEST);
-
-  // define an animation loop
-  function animate() {
-    cube.update(1.0 / 60.0);
-    render();
-
-    let increment = 0.5;
-    if (!paused) {
-      switch (axis) {
-        case 'x':
-          model = new Matrix4().setRotate(increment, 1, 0, 0).multiply(model);
-          axis = 'x';
-          break;
-        case 'y':
-          axis = 'y';
-          model = new Matrix4().setRotate(increment, 0, 1, 0).multiply(model);
-          break;
-        case 'z':
-          axis = 'z';
-          model = new Matrix4().setRotate(increment, 0, 0, 1).multiply(model);
-          break;
-        default:
-      }
-    }
-    requestAnimationFrame(animate, canvas);
-  }
-
-  animate();
 }
 
 function drawHair(matrix = new Matrix4()) {

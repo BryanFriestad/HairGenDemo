@@ -1,3 +1,4 @@
+import { Vector3, Matrix4 } from 'lib/cuon-matrix';
 /**
  * Encapsulation of key attributes of a 3D object.  Each object has a position,
  * rotation, and scale.  The object's transformation matrix is defined as the product of
