@@ -1,5 +1,5 @@
 import { Vector3, Matrix4 } from 'lib/cuon-matrix';
-import VerletParticle from './VerletParticle.js';
+import VerletParticle from 'utils/VerletParticle.js';
 import DistanceConstraint from 'utils/Constraint.js';
 
 class HairStrand {
@@ -9,7 +9,6 @@ class HairStrand {
     normal = [1, 1, 1],
     drawFunction = () => {},
     res = 8,
-    constr_list,
   }) {
     this.length = length;
     const [base_x, base_y, base_z] = base;
@@ -21,6 +20,7 @@ class HairStrand {
     //additionally, one unit on the normal is one unit on the length
     this.num_control_vertices = res; //this will create n-1 control hair segments
     this.verlet_parts = [];
+    this.constraints = [];
     this.bezier_control_vertices = [];
     this.final_vertices;
     this.draw = drawFunction;
@@ -46,7 +46,7 @@ class HairStrand {
 
     let dist = length / (this.num_control_vertices - 1);
     for (let i = 0; i < this.verlet_parts.length - 1; i++) {
-      constr_list.push(
+      this.constraints.push(
         new DistanceConstraint(
           this.verlet_parts[i],
           this.verlet_parts[i + 1],
@@ -71,6 +71,9 @@ class HairStrand {
     //update all verlet particles
     for (let i = 0; i < this.num_control_vertices; i++) {
       this.verlet_parts[i].update(delta_t);
+    }
+    for (let i = 0; i < this.constraints.length; i++) {
+      this.constraints[i].solve();
     }
     this.generateBezierControlVertices();
     this.final_vertices = this.generateFinalVertices(this.num_control_vertices); //8 is the number of verts between each pair of control points

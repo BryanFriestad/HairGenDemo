@@ -46,7 +46,21 @@ export default class ChildHair extends HairStrand {
       constr_list,
     });
     this.parents = parents;
+    this.b_A = b_A;
+    this.b_B = b_B;
+    this.b_C = b_C;
   }
 
-  // TODO: use parents to control interpolate control vertices
+  update(delta_t) {
+    // interpolate verlet particles
+    for (let i = 0; i < this.num_control_vertices; i++) {
+      this.verlet_parts[i].update(delta_t);
+    }
+    for (let i = 0; i < this.constraints.length; i++) {
+      this.constraints[i].solve();
+    }
+    // generate curves based on interpolated vertices
+    this.generateBezierControlVertices();
+    this.final_vertices = this.generateFinalVertices(this.num_control_vertices); //8 is the number of verts between each pair of control points
+  }
 }

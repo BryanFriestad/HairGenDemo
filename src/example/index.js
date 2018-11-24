@@ -319,7 +319,7 @@ function drawCube(matrix = new Matrix4()) {
   loc = gl.getUniformLocation(shader, 'sampler');
   gl.uniform1i(loc, textureUnit);
 
-  gl.drawArrays(gl.TRIANGLES, 0, theModel.numVertices);
+  gl.drawArrays(gl.LINE_STRIP, 0, theModel.numVertices);
 
   gl.disableVertexAttribArray(normalIndex);
   gl.disableVertexAttribArray(positionIndex);
