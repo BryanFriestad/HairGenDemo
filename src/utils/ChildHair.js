@@ -2,10 +2,7 @@ import HairStrand from './Hair';
 import Vector from './Vector';
 
 export default class ChildHair extends HairStrand {
-  constructor(
-    parents = Array(3),
-    { drawFunction = () => {}, res = 8, constr_list = [] }
-  ) {
+  constructor(parents = Array(3), { drawFunction = () => {}, res = 8 }) {
     let length = 1;
     /*
      * By generating two random values in [0..1],
@@ -43,7 +40,6 @@ export default class ChildHair extends HairStrand {
       res,
       base: Y_base.items,
       normal: Y_normal.items,
-      constr_list,
     });
     this.parents = parents;
     this.b_A = b_A;
@@ -64,9 +60,6 @@ export default class ChildHair extends HairStrand {
         weights: [this.b_A, this.b_B, this.b_C],
         parents: p_verlet_parts,
       });
-    }
-    for (let i = 0; i < this.constraints.length; i++) {
-      this.constraints[i].solve();
     }
     // generate curves based on interpolated vertices
     this.generateBezierControlVertices();
