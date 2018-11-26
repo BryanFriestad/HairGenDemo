@@ -1,8 +1,8 @@
 import { Matrix4 } from 'lib/cuon-matrix';
 import CS336Object from './CS336Object';
 import HairStrand from './Hair';
-import DistanceConstraint from './Constraint.js';
 import ChildHair from './ChildHair';
+import { ConstraintContainer } from './Constraint';
 
 export default class HairyObject extends CS336Object {
   constructor({
@@ -10,6 +10,7 @@ export default class HairyObject extends CS336Object {
     modelData = {},
     drawHairFunction = () => {},
     hairDensity = 0,
+    constraintContainer,
   }) {
     super(drawFunction);
     const {
@@ -32,12 +33,19 @@ export default class HairyObject extends CS336Object {
       normals,
       vertexNormals,
       drawHairFunction,
+      constraintContainer,
     });
     this.generateChildHairs({ hairDensity, vertices });
   }
 
   // hashmap the vertices to aggregate the vertex pairs
-  generateHairs({ numVertices, vertices, normals, vertexNormals }) {
+  generateHairs({
+    numVertices,
+    vertices,
+    normals,
+    vertexNormals,
+    constraintContainer,
+  }) {
     let vertexMap = {};
     for (let i = 0; i < numVertices; i++) {
       let [a, b, c] = vertices.slice(3 * i, 3 * i + 3);
@@ -81,7 +89,7 @@ export default class HairyObject extends CS336Object {
         normal: avgNormal,
         drawFunction: this.drawHairFunction,
         res: this.res,
-        constr_list: this.constraints,
+        constraintContainer,
       });
       this.hairs.push(hairStrand);
       this.hairMap[this.vertexToKey(v_base)] = hairStrand;
@@ -106,7 +114,6 @@ export default class HairyObject extends CS336Object {
           new ChildHair(parents, {
             drawFunction: this.drawHairFunction,
             res: this.res,
-            constr_list: this.constraints,
           })
         );
       }

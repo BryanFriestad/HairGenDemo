@@ -1,10 +1,10 @@
 import { Matrix4, Vector4 } from 'lib/cuon-matrix';
 import { getWebGLContext, initShaders } from 'lib/cuon-utils';
 
-import VerletParticle from 'utils/VerletParticle.js';
-import DistanceConstraint from 'utils/Constraint.js';
-import HairStrand from 'utils/Hair.js';
-import HairyObject from 'utils/HairyObject.js';
+import VerletParticle from 'utils/VerletParticle';
+import { ConstraintContainer } from 'utils/Constraint';
+import HairStrand from 'utils/Hair';
+import HairyObject from 'utils/HairyObject';
 import { getModelData, makeNormalMatrixElements } from 'utils/Geometry';
 
 import * as THREE from 'three';
@@ -18,6 +18,9 @@ import CheckerBoard from './check64.png';
 // let theModel = getModelData(new THREE.SphereGeometry(1, 8, 8));
 let theModel = getModelData(new THREE.CubeGeometry());
 // let theModel = getModelData(new THREE.PlaneGeometry());
+
+// Initialize constraint container for global storage of constraints
+const constraintContainer = new ConstraintContainer();
 
 const imageFilename = CheckerBoard;
 
@@ -81,6 +84,7 @@ const cube = new HairyObject({
   modelData: theModel,
   drawHairFunction: drawHair,
   hairDensity: 10,
+  constraintContainer,
 });
 const cubeScale = 2;
 cube.setScale(cubeScale, cubeScale, cubeScale);
@@ -230,6 +234,7 @@ function startForReal(image) {
     let delta = (new Date().getTime() - lastCalledTime) / 1000;
     lastCalledTime = new Date().getTime();
 
+    constraintContainer.solve();
     cube.update(delta);
     render();
 
