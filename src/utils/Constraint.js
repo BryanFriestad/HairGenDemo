@@ -1,4 +1,4 @@
-class Constraint {
+export class Constraint {
   constructor(p1, p2) {
     this.particle1 = p1;
     this.particle2 = p2;
@@ -7,7 +7,7 @@ class Constraint {
   solve() {}
 }
 
-class DistanceConstraint extends Constraint {
+export class DistanceConstraint extends Constraint {
   constructor(p1, p2, restDist) {
     super(p1, p2);
     this.restDistance = restDist;
@@ -47,4 +47,20 @@ class DistanceConstraint extends Constraint {
   }
 }
 
-export default DistanceConstraint;
+export class ConstraintContainer {
+  constructor() {
+    this.constraints = [];
+  }
+
+  add(constraint) {
+    this.constraints.push(constraint);
+  }
+
+  solve(iterations = 11) {
+    for (let i = 0; i < 1 + iterations; i++) {
+      for (let j = 0; j < this.constraints.length; j++) {
+        this.constraints[j].solve();
+      }
+    }
+  }
+}
