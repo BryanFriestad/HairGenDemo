@@ -9,7 +9,7 @@ class VerletParticle {
     this.acceleration = new Vector3();
     this.fixed_pos = anchored;
     this.dampen_factor = damping;
-    if (this.fixed_pos) this.acceloration = new Vector3();
+    if (this.fixed_pos) this.acceleration = new Vector3();
     else this.acceleration = new Vector3([0, -9.81, 0]);
   }
 

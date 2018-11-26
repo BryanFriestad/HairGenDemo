@@ -80,7 +80,7 @@ const cube = new HairyObject({
   drawFunction: drawCube,
   modelData: theModel,
   drawHairFunction: drawHair,
-  hairDensity: 10,
+  hairDensity: 100,
 });
 const cubeScale = 2;
 cube.setScale(cubeScale, cubeScale, cubeScale);
