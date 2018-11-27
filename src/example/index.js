@@ -16,7 +16,7 @@ import FSHADER_SOURCE_LINES from './fshader_lines.glsl';
 import CheckerBoard from './check64.png';
 
 // let theModel = getModelData(new THREE.SphereGeometry(1, 8, 8));
-let theModel = getModelData(new THREE.CubeGeometry());
+ let theModel = getModelData(new THREE.CubeGeometry(1, 1, 1, 2, 2, 2));
 // let theModel = getModelData(new THREE.PlaneGeometry());
 
 // Initialize constraint container for global storage of constraints
@@ -66,9 +66,9 @@ let lightPosition = new Vector4([-4, 4, 4, 1]);
 
 //view matrix
 let view = new Matrix4().setLookAt(
-  10,
   5,
-  10, // eye
+  5,
+  5, // eye
   0,
   0,
   0, // at - looking at the origin
@@ -83,7 +83,7 @@ const cube = new HairyObject({
   drawFunction: drawCube,
   modelData: theModel,
   drawHairFunction: drawHair,
-  hairDensity: 10,
+  hairDensity: 50,
   constraintContainer,
 });
 const cubeScale = 2;
@@ -120,7 +120,6 @@ function handleKeyPress(event) {
 
 function render() {
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BIT);
-
   cube.render();
 }
 
@@ -225,7 +224,9 @@ function startForReal(image) {
 
   gl.enable(gl.DEPTH_TEST);
 
+  //final setup for demo
   let lastCalledTime;
+  constraintContainer.generatePPConstraints(cube.getParticles(false));
 
   // define an animation loop
   function animate(timestamp) {

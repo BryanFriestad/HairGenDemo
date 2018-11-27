@@ -24,6 +24,9 @@ class HairStrand {
     this.bezier_control_vertices = [];
     this.final_vertices;
     this.draw = drawFunction;
+    this.bezier_resolution = 4; //this is the number of final vertices between each control vertex
+    //4 is smooth enough for shorter hairs
+    //TODO: make this a parameter
 
     for (let i = 0; i < this.num_control_vertices; i++) {
       let temp_x =
@@ -33,13 +36,14 @@ class HairStrand {
       let temp_z =
         (i / (this.num_control_vertices - 1)) * normal_z * length + base_z;
       //TODO: i just got thinking that there might be an issue here with the whole normal * length thing
+      let pearl_radius = 0.06 + (0.06 * i / (this.num_control_vertices - 1));
       if (i == 0) {
         this.verlet_parts.push(
-          new VerletParticle(temp_x, temp_y, temp_z, true, 0.99)
+          new VerletParticle(temp_x, temp_y, temp_z, true, 0.96, pearl_radius)
         );
       } else {
         this.verlet_parts.push(
-          new VerletParticle(temp_x, temp_y, temp_z, false, 0.99)
+          new VerletParticle(temp_x, temp_y, temp_z, false, 0.96, pearl_radius)
         );
       }
     }
@@ -58,7 +62,7 @@ class HairStrand {
     }
 
     this.generateBezierControlVertices();
-    this.final_vertices = this.generateFinalVertices(this.num_control_vertices); //8 is the number of verts between each pair of control points
+    this.final_vertices = this.generateFinalVertices(this.bezier_resolution);
   }
 
   getRandomWiggle(range) {
