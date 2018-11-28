@@ -100,17 +100,14 @@ export class ConstraintContainer {
   }
 
   generatePPConstraints(particles){
-    let sum = 0
     for(let i = 0; i < particles.length; i++){
       for(let j = i + 1; j < particles.length; j++){
         this.add(new PearlPearlConstraint(particles[i], particles[j]));
-        sum++;
       }
     }
-    console.log(sum);
   }
 
-  solve(iterations = 1) { //i think 11 is too many, reduced to 5 iterations default
+  solve(iterations = 5) { //i think 11 is too many, reduced to 5 iterations default
     for (let i = 0; i < iterations; i++) {
       for (let j = 0; j < this.constraints.length; j++) {
         this.constraints[j].solve();

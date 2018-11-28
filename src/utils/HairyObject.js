@@ -1,4 +1,5 @@
 import { Matrix4 } from 'lib/cuon-matrix';
+import { Vector3 } from 'lib/cuon-matrix';
 import CS336Object from './CS336Object';
 import HairStrand from './Hair';
 import ChildHair from './ChildHair';
@@ -146,10 +147,11 @@ export default class HairyObject extends CS336Object {
     super.render(matrixWorld);
     const currentWorld = new Matrix4(matrixWorld).multiply(this.getMatrix());
     for (let i = 0; i < this.hairs.length; i++) {
-      this.hairs[i].render(currentWorld);
+      this.hairs[i].render(matrixWorld);
+      this.hairs[i].rebase(...currentWorld.multiplyVector3(new Vector3(this.hairs[i].base)).elements);
     }
     for (let i = 0; i < this.childHairs.length; i++) {
-      this.childHairs[i].render(currentWorld);
+      this.childHairs[i].render(matrixWorld);
     }
   }
 
@@ -159,14 +161,6 @@ export default class HairyObject extends CS336Object {
       let temp = this.hairs[i].verlet_parts;
       for(let j = 0; j < temp.length; j++){
         output.push(temp[j]);
-      }
-    }
-    if(includeChild){
-      for(let i = 0; i < this.childHairs.length; i++){
-        let temp = this.childHairs[i].verlet_parts;
-        for(let j = 0; j < temp.length; j++){
-          output.push(temp[j]);
-        }
       }
     }
     return output;

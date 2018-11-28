@@ -36,14 +36,20 @@ class HairStrand {
       let temp_z =
         (i / (this.num_control_vertices - 1)) * normal_z * length + base_z;
       //TODO: i just got thinking that there might be an issue here with the whole normal * length thing
-      let pearl_radius = 0.06 + (0.06 * i / (this.num_control_vertices - 1));
+      let pearl_radius = 0.1 + (0.1 * i / (this.num_control_vertices - 1));
+
+      temp_x += this.getRandomWiggle(0.02);
+      temp_y += this.getRandomWiggle(0.02);
+      temp_z += this.getRandomWiggle(0.02);
+      let dampen_factor = 0.96 + this.getRandomWiggle(0.06);
+      pearl_radius += this.getRandomWiggle(0.02);
       if (i == 0) {
         this.verlet_parts.push(
-          new VerletParticle(temp_x, temp_y, temp_z, true, 0.96, pearl_radius)
+          new VerletParticle(temp_x, temp_y, temp_z, true, dampen_factor, pearl_radius)
         );
       } else {
         this.verlet_parts.push(
-          new VerletParticle(temp_x, temp_y, temp_z, false, 0.96, pearl_radius)
+          new VerletParticle(temp_x, temp_y, temp_z, false, dampen_factor, pearl_radius)
         );
       }
     }
@@ -79,12 +85,12 @@ class HairStrand {
       this.verlet_parts[i].update(delta_t);
     }
     this.generateBezierControlVertices();
-    this.final_vertices = this.generateFinalVertices(this.num_control_vertices); //8 is the number of verts between each pair of control points
+    this.final_vertices = this.generateFinalVertices(this.bezier_resolution); //8 is the number of verts between each pair of control points
   }
 
   render(matrixWorld) {
     const currentWorld = new Matrix4(matrixWorld);
-    this.draw(currentWorld);
+    this.draw(matrixWorld);
   }
 
   generateBezierControlVertices() {

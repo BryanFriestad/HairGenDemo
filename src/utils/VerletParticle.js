@@ -29,8 +29,6 @@ class VerletParticle {
   }
 
   interpolate({ weights: [b_A, b_B, b_C], parents: [p_A, p_B, p_C] }) {
-    if (this.fixed_pos) return;
-
     let pA_pos = new Vector(p_A.position.elements).scale(b_A);
     let pB_pos = new Vector(p_B.position.elements).scale(b_B);
     let pC_pos = new Vector(p_C.position.elements).scale(b_C);

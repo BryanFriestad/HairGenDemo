@@ -15,9 +15,9 @@ import VSHADER_SOURCE_LINES from './vshader_lines.glsl';
 import FSHADER_SOURCE_LINES from './fshader_lines.glsl';
 import CheckerBoard from './check64.png';
 
-// let theModel = getModelData(new THREE.SphereGeometry(1, 8, 8));
- let theModel = getModelData(new THREE.CubeGeometry(1, 1, 1, 2, 2, 2));
-// let theModel = getModelData(new THREE.PlaneGeometry());
+ let theModel = getModelData(new THREE.SphereGeometry(1, 8, 8));
+// let theModel = getModelData(new THREE.CubeGeometry(1, 1, 1, 1, 1, 1));
+//let theModel = getModelData(new THREE.PlaneGeometry());
 
 // Initialize constraint container for global storage of constraints
 const constraintContainer = new ConstraintContainer();
@@ -55,10 +55,6 @@ let textureHandle;
 let shader;
 let line_shader;
 
-// transformation matrices
-let model = new Matrix4();
-let modelScale = new Matrix4();
-
 let axis = 'y';
 let paused = true;
 
@@ -83,7 +79,7 @@ const cube = new HairyObject({
   drawFunction: drawCube,
   modelData: theModel,
   drawHairFunction: drawHair,
-  hairDensity: 50,
+  hairDensity: 5,
   constraintContainer,
 });
 const cubeScale = 2;
@@ -233,26 +229,27 @@ function startForReal(image) {
     // calculate duration since last animation frame
     if (!lastCalledTime) lastCalledTime = new Date().getTime();
     let delta = (new Date().getTime() - lastCalledTime) / 1000;
+    document.getElementById("fps_tracker").innerHTML = (1.0/delta).toFixed(2) + " fps";
     lastCalledTime = new Date().getTime();
 
     constraintContainer.solve();
     cube.update(delta);
     render();
 
-    let increment = 0.5;
+    let increment = 1.5 * 60 * delta;
     if (!paused) {
       switch (axis) {
         case 'x':
-          model = new Matrix4().setRotate(increment, 1, 0, 0).multiply(model);
+          cube.rotateX(increment);
           axis = 'x';
           break;
         case 'y':
           axis = 'y';
-          model = new Matrix4().setRotate(increment, 0, 1, 0).multiply(model);
+          cube.rotateY(increment);
           break;
         case 'z':
           axis = 'z';
-          model = new Matrix4().setRotate(increment, 0, 0, 1).multiply(model);
+          cube.rotateZ(increment);
           break;
         default:
       }
@@ -297,17 +294,13 @@ function drawCube(matrix = new Matrix4()) {
   gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
   let loc = gl.getUniformLocation(shader, 'model');
-  let current = new Matrix4()
-    .multiply(matrix)
-    .multiply(model)
-    .multiply(modelScale);
-  gl.uniformMatrix4fv(loc, false, current.elements);
+  gl.uniformMatrix4fv(loc, false, matrix.elements);
   loc = gl.getUniformLocation(shader, 'view');
   gl.uniformMatrix4fv(loc, false, view.elements);
   loc = gl.getUniformLocation(shader, 'projection');
   gl.uniformMatrix4fv(loc, false, projection.elements);
   loc = gl.getUniformLocation(shader, 'normalMatrix');
-  gl.uniformMatrix3fv(loc, false, makeNormalMatrixElements(model, view));
+  gl.uniformMatrix3fv(loc, false, makeNormalMatrixElements(matrix, view));
 
   loc = gl.getUniformLocation(shader, 'lightPosition');
   gl.uniform4fv(loc, lightPosition.elements);
@@ -349,17 +342,13 @@ function drawHair(matrix = new Matrix4()) {
   gl.vertexAttribPointer(positionIndex, 3, gl.FLOAT, false, 0, 0);
 
   let loc = gl.getUniformLocation(line_shader, 'model');
-  let current = new Matrix4()
-    .multiply(matrix)
-    .multiply(model)
-    .multiply(modelScale);
-  gl.uniformMatrix4fv(loc, false, current.elements);
+  gl.uniformMatrix4fv(loc, false, matrix.elements);
   loc = gl.getUniformLocation(line_shader, 'view');
   gl.uniformMatrix4fv(loc, false, view.elements);
   loc = gl.getUniformLocation(line_shader, 'projection');
   gl.uniformMatrix4fv(loc, false, projection.elements);
   loc = gl.getUniformLocation(line_shader, 'normalMatrix');
-  gl.uniformMatrix3fv(loc, false, makeNormalMatrixElements(model, view));
+  gl.uniformMatrix3fv(loc, false, makeNormalMatrixElements(matrix, view));
 
   loc = gl.getUniformLocation(line_shader, 'lightPosition');
   gl.uniform4fv(loc, lightPosition.elements);
