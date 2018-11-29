@@ -3,6 +3,7 @@ import { Vector3 } from 'lib/cuon-matrix';
 import CS336Object from './CS336Object';
 import HairStrand from './Hair';
 import ChildHair from './ChildHair';
+import VerletParticle from './VerletParticle';
 import { ConstraintContainer } from './Constraint';
 
 export default class HairyObject extends CS336Object {
@@ -27,6 +28,10 @@ export default class HairyObject extends CS336Object {
     this.constraints = [];
     this.res = 5; //5 is a good medium between fast and smooth
     this.drawHairFunction = drawHairFunction;
+    this.object_pearls = []; //a list of the verlet particles that the hairs can collide with
+    this.object_pearls.push(new VerletParticle(this.position.elements[0],
+                                               this.position.elements[1],
+                                               this.position.elements[2], true, 0, 2));
 
     this.generateHairs({
       numVertices,
@@ -37,6 +42,8 @@ export default class HairyObject extends CS336Object {
       constraintContainer,
     });
     this.generateChildHairs({ hairDensity, vertices });
+
+    constraintContainer.addHairObjectCollision(this.object_pearls, this.hairs);
   }
 
   // hashmap the vertices to aggregate the vertex pairs
@@ -86,7 +93,7 @@ export default class HairyObject extends CS336Object {
       ];
 
       const hairStrand = new HairStrand({
-        length: 2.5,
+        length: 4.5,
         base: v_base,
         normal: avgNormal,
         drawFunction: this.drawHairFunction,

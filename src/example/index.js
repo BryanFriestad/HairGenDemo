@@ -15,7 +15,7 @@ import VSHADER_SOURCE_LINES from './vshader_lines.glsl';
 import FSHADER_SOURCE_LINES from './fshader_lines.glsl';
 import CheckerBoard from './check64.png';
 
- let theModel = getModelData(new THREE.SphereGeometry(1, 8, 8));
+ let theModel = getModelData(new THREE.SphereGeometry(1, 10, 10));
 // let theModel = getModelData(new THREE.CubeGeometry(1, 1, 1, 1, 1, 1));
 //let theModel = getModelData(new THREE.PlaneGeometry());
 
@@ -57,14 +57,15 @@ let line_shader;
 
 let axis = 'y';
 let paused = true;
+let is_mesh = true;
 
 let lightPosition = new Vector4([-4, 4, 4, 1]);
 
 //view matrix
 let view = new Matrix4().setLookAt(
-  5,
-  5,
-  5, // eye
+  12,
+  12,
+  12, // eye
   0,
   0,
   0, // at - looking at the origin
@@ -79,7 +80,7 @@ const cube = new HairyObject({
   drawFunction: drawCube,
   modelData: theModel,
   drawHairFunction: drawHair,
-  hairDensity: 5,
+  hairDensity: 3,
   constraintContainer,
 });
 const cubeScale = 2;
@@ -111,6 +112,8 @@ function handleKeyPress(event) {
     case 'z':
       axis = 'z';
       break;
+    case 'm':
+      is_mesh = !is_mesh;
   }
 }
 
@@ -222,7 +225,7 @@ function startForReal(image) {
 
   //final setup for demo
   let lastCalledTime;
-  constraintContainer.generatePPConstraints(cube.getParticles(false));
+  //constraintContainer.generatePPConstraints(cube.getParticles(false));
 
   // define an animation loop
   function animate(timestamp) {
@@ -318,7 +321,12 @@ function drawCube(matrix = new Matrix4()) {
   loc = gl.getUniformLocation(shader, 'sampler');
   gl.uniform1i(loc, textureUnit);
 
-  gl.drawArrays(gl.LINE_STRIP, 0, theModel.numVertices);
+  if(is_mesh){
+    gl.drawArrays(gl.TRIANGLES, 0, theModel.numVertices);
+  }
+  else{
+    gl.drawArrays(gl.LINE_STRIP, 0, theModel.numVertices);
+  }
 
   gl.disableVertexAttribArray(normalIndex);
   gl.disableVertexAttribArray(positionIndex);

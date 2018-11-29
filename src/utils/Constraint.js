@@ -99,6 +99,18 @@ export class ConstraintContainer {
     this.constraints.push(constraint);
   }
 
+  //adds pp constraints between the given hairs and object spheres
+  addHairObjectCollision(obj_pearls, hairs){
+    for(let i = 0; i < obj_pearls.length; i++){
+      for(let j = 0; j < hairs.length; j++){
+        let parts = hairs[j].verlet_parts;
+        for(let k = 1; k < parts.length; k++){
+          this.add(new PearlPearlConstraint(obj_pearls[i], parts[k]));
+        }
+      }
+    }
+  }
+
   generatePPConstraints(particles){
     for(let i = 0; i < particles.length; i++){
       for(let j = i + 1; j < particles.length; j++){
