@@ -32,7 +32,6 @@ export default class HairyObject extends CS336Object {
     this.object_pearls.push(new VerletParticle(this.position.elements[0],
                                                this.position.elements[1],
                                                this.position.elements[2], true, 0, 2));
-
     this.generateHairs({
       numVertices,
       vertices,
@@ -42,6 +41,9 @@ export default class HairyObject extends CS336Object {
       constraintContainer,
     });
     this.generateChildHairs({ hairDensity, vertices });
+    console.log("num of control hairs: " + this.hairs.length);
+    console.log("num of control verts: " + this.hairs.length * this.res);
+    console.log("num of child hairs: " + this.childHairs.length);
 
     constraintContainer.addHairObjectCollision(this.object_pearls, this.hairs);
   }
@@ -133,7 +135,7 @@ export default class HairyObject extends CS336Object {
     return `${a},${b},${c}`;
   }
 
-  update(delta_t) {
+  update(delta_t, allFinalVertices) {
     // if (Math.random() > 0.08) {
     //   let rand_hair = Math.floor(Math.random() * this.hairs.length);
     //   this.hairs[rand_hair].rebase(
@@ -143,22 +145,23 @@ export default class HairyObject extends CS336Object {
     //   );
     // }
     for (let i = 0; i < this.hairs.length; i++) {
-      this.hairs[i].update(delta_t);
+      this.hairs[i].update(delta_t, allFinalVertices);
     }
     for (let i = 0; i < this.childHairs.length; i++) {
-      this.childHairs[i].update(delta_t);
+      this.childHairs[i].update(delta_t, allFinalVertices);
     }
   }
 
   render(matrixWorld) {
     super.render(matrixWorld);
     const currentWorld = new Matrix4(matrixWorld).multiply(this.getMatrix());
+    this.hairs[0].render(new Matrix4());
     for (let i = 0; i < this.hairs.length; i++) {
-      this.hairs[i].render(matrixWorld);
+      //this.hairs[i].render(new Matrix4());
       this.hairs[i].rebase(...currentWorld.multiplyVector3(new Vector3(this.hairs[i].base)).elements);
     }
     for (let i = 0; i < this.childHairs.length; i++) {
-      this.childHairs[i].render(matrixWorld);
+      //this.childHairs[i].render(new Matrix4());
     }
   }
 

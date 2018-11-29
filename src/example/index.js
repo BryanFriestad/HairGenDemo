@@ -15,12 +15,14 @@ import VSHADER_SOURCE_LINES from './vshader_lines.glsl';
 import FSHADER_SOURCE_LINES from './fshader_lines.glsl';
 import CheckerBoard from './check64.png';
 
- let theModel = getModelData(new THREE.SphereGeometry(1, 10, 10));
+ let theModel = getModelData(new THREE.SphereGeometry(1, 12, 12));
+// let theModel = getModelData(new THREE.SphereGeometry(1, 12, 12, 2, 4.3, 1, 2)); //this is a good mesh for the scalp (for hair extrusion, but not rendering)
 // let theModel = getModelData(new THREE.CubeGeometry(1, 1, 1, 1, 1, 1));
-//let theModel = getModelData(new THREE.PlaneGeometry());
+// let theModel = getModelData(new THREE.PlaneGeometry());
 
 // Initialize constraint container for global storage of constraints
 const constraintContainer = new ConstraintContainer();
+let allFinalVertices = [];
 
 const imageFilename = CheckerBoard;
 
@@ -80,7 +82,7 @@ const cube = new HairyObject({
   drawFunction: drawCube,
   modelData: theModel,
   drawHairFunction: drawHair,
-  hairDensity: 3,
+  hairDensity: 5,
   constraintContainer,
 });
 const cubeScale = 2;
@@ -236,8 +238,10 @@ function startForReal(image) {
     lastCalledTime = new Date().getTime();
 
     constraintContainer.solve();
-    cube.update(delta);
+    cube.update(delta, allFinalVertices);
+    allFinalVertices = new Float32Array(allFinalVertices);
     render();
+    allFinalVertices = [];
 
     let increment = 1.5 * 60 * delta;
     if (!paused) {
@@ -346,7 +350,7 @@ function drawHair(matrix = new Matrix4()) {
   gl.enableVertexAttribArray(positionIndex);
 
   gl.bindBuffer(gl.ARRAY_BUFFER, hairVertexBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, this.final_vertices, gl.STATIC_DRAW);
+  gl.bufferData(gl.ARRAY_BUFFER, allFinalVertices, gl.STATIC_DRAW);
   gl.vertexAttribPointer(positionIndex, 3, gl.FLOAT, false, 0, 0);
 
   let loc = gl.getUniformLocation(line_shader, 'model');
@@ -361,7 +365,11 @@ function drawHair(matrix = new Matrix4()) {
   loc = gl.getUniformLocation(line_shader, 'lightPosition');
   gl.uniform4fv(loc, lightPosition.elements);
 
-  gl.drawArrays(gl.LINE_STRIP, 0, this.final_vertices.length / 3.0);
+  let num_hairs = cube.hairs.length + cube.childHairs.length;
+  let num_verts_per_hair = cube.hairs[0].final_vertices.length;
+  for(let i = 0; i < num_hairs; i++){
+    gl.drawArrays(gl.LINE_STRIP, i * num_verts_per_hair / 3.0, num_verts_per_hair / 3.0);
+  }
 
   gl.disableVertexAttribArray(positionIndex);
   gl.useProgram(null);

@@ -79,13 +79,16 @@ class HairStrand {
     this.verlet_parts[0].setPosition(x, y, z); //move the base particle to the position
   }
 
-  update(delta_t) {
+  update(delta_t, allFinalVertices) {
     //update all verlet particles
     for (let i = 0; i < this.num_control_vertices; i++) {
       this.verlet_parts[i].update(delta_t);
     }
     this.generateBezierControlVertices();
     this.final_vertices = this.generateFinalVertices(this.bezier_resolution); //8 is the number of verts between each pair of control points
+    for(let i = 0; i < this.final_vertices.length; i++){
+      allFinalVertices.push(this.final_vertices[i]);
+    }
   }
 
   render(matrixWorld) {
@@ -205,7 +208,7 @@ class HairStrand {
       ]);
       this.generateBezierPoints(p1, p2, p3, p4, num_points, output);
     }
-    return new Float32Array(output);
+    return output;
   }
 
   generateBezierPoints(p1, p2, p3, p4, num_points, array) {

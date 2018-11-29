@@ -47,7 +47,7 @@ export default class ChildHair extends HairStrand {
     this.b_C = b_C;
   }
 
-  update(delta_t) {
+  update(delta_t, allFinalVertices) {
     // interpolate verlet particles
     for (let i = 0; i < this.num_control_vertices; i++) {
       let verlet_part = this.verlet_parts[i];
@@ -64,5 +64,8 @@ export default class ChildHair extends HairStrand {
     // generate curves based on interpolated vertices
     this.generateBezierControlVertices();
     this.final_vertices = this.generateFinalVertices(this.bezier_resolution); //8 is the number of verts between each pair of control points
+    for(let i = 0; i < this.final_vertices.length; i++){
+      allFinalVertices.push(this.final_vertices[i]);
+    }
   }
 }

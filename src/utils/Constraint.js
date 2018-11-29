@@ -119,7 +119,7 @@ export class ConstraintContainer {
     }
   }
 
-  solve(iterations = 5) { //i think 11 is too many, reduced to 5 iterations default
+  solve(iterations = 10) { //i think 11 is too many, reduced to 5 iterations default
     for (let i = 0; i < iterations; i++) {
       for (let j = 0; j < this.constraints.length; j++) {
         this.constraints[j].solve();
