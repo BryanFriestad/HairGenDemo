@@ -1,4 +1,5 @@
 import { Matrix4 } from 'lib/cuon-matrix';
+import { Vector3 } from 'lib/cuon-matrix';
 import CS336Object from './CS336Object';
 import HairStrand from './Hair';
 import ChildHair from './ChildHair';
@@ -24,7 +25,7 @@ export default class HairyObject extends CS336Object {
     this.hairs = [];
     this.childHairs = [];
     this.constraints = [];
-    this.res = 3; // set at 3 for now to improve render times
+    this.res = 5; //5 is a good medium between fast and smooth
     this.drawHairFunction = drawHairFunction;
 
     this.generateHairs({
@@ -85,6 +86,7 @@ export default class HairyObject extends CS336Object {
       ];
 
       const hairStrand = new HairStrand({
+        length: 2.5,
         base: v_base,
         normal: avgNormal,
         drawFunction: this.drawHairFunction,
@@ -145,10 +147,22 @@ export default class HairyObject extends CS336Object {
     super.render(matrixWorld);
     const currentWorld = new Matrix4(matrixWorld).multiply(this.getMatrix());
     for (let i = 0; i < this.hairs.length; i++) {
-      this.hairs[i].render(currentWorld);
+      this.hairs[i].render(matrixWorld);
+      this.hairs[i].rebase(...currentWorld.multiplyVector3(new Vector3(this.hairs[i].base)).elements);
     }
     for (let i = 0; i < this.childHairs.length; i++) {
-      this.childHairs[i].render(currentWorld);
+      this.childHairs[i].render(matrixWorld);
     }
+  }
+
+  getParticles(includeChild){
+    let output = [];
+    for(let i = 0; i < this.hairs.length; i++){
+      let temp = this.hairs[i].verlet_parts;
+      for(let j = 0; j < temp.length; j++){
+        output.push(temp[j]);
+      }
+    }
+    return output;
   }
 }
