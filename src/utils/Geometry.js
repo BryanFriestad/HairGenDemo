@@ -67,15 +67,5 @@ export function makeNormalMatrixElements(model, view) {
   n.transpose();
   n.invert();
   n = n.elements;
-  return new Float32Array([
-    n[0],
-    n[1],
-    n[2],
-    n[4],
-    n[5],
-    n[6],
-    n[8],
-    n[9],
-    n[10],
-  ]);
+  return new Float32Array([n[0], n[1], n[2], n[4], n[5], n[6], n[8], n[9], n[10]]);
 }

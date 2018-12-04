@@ -51,11 +51,7 @@ export default class ChildHair extends HairStrand {
     // interpolate verlet particles
     for (let i = 0; i < this.num_control_vertices; i++) {
       let verlet_part = this.verlet_parts[i];
-      let p_verlet_parts = [
-        this.parents[0].verlet_parts[i],
-        this.parents[1].verlet_parts[i],
-        this.parents[2].verlet_parts[i],
-      ];
+      let p_verlet_parts = [this.parents[0].verlet_parts[i], this.parents[1].verlet_parts[i], this.parents[2].verlet_parts[i]];
       verlet_part.interpolate({
         weights: [this.b_A, this.b_B, this.b_C],
         parents: p_verlet_parts,

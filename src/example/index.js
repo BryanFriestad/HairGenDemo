@@ -27,11 +27,7 @@ const imageFilename = CheckerBoard;
 // light and material properties, remember this is column major
 
 // generic white light
-var lightPropElements = new Float32Array([
-  ...[0.2, 0.2, 0.2],
-  ...[0.7, 0.7, 0.7],
-  ...[0.7, 0.7, 0.7],
-]);
+var lightPropElements = new Float32Array([...[0.2, 0.2, 0.2], ...[0.7, 0.7, 0.7], ...[0.7, 0.7, 0.7]]);
 
 //very fake looking white, useful for testing lights
 // light and material properties, remember this is column major
@@ -229,8 +225,7 @@ function startForReal(image) {
     // calculate duration since last animation frame
     if (!lastCalledTime) lastCalledTime = new Date().getTime();
     let delta = (new Date().getTime() - lastCalledTime) / 1000;
-    document.getElementById('fps_tracker').innerHTML =
-      (1.0 / delta).toFixed(2) + ' fps';
+    document.getElementById('fps_tracker').innerHTML = (1.0 / delta).toFixed(2) + ' fps';
     lastCalledTime = new Date().getTime();
 
     constraintContainer.solve();

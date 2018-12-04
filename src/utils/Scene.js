@@ -2,11 +2,7 @@ import { Matrix4, Vector4 } from 'lib/cuon-matrix';
 import { getWebGLContext, initShaders } from 'lib/cuon-utils';
 
 export default class Scene {
-  constructor({
-    additionalAnimation = () => {},
-    additionalSetup = () => {},
-    additionalHandleKeypress = () => {},
-  }) {
+  constructor({ additionalAnimation = () => {}, additionalSetup = () => {}, additionalHandleKeypress = () => {} }) {
     this.objects = [];
 
     this.imageFilenames = [];
@@ -114,11 +110,7 @@ export default class Scene {
     }
     gl.bindBuffer(bufferType || gl.ARRAY_BUFFER, buffer);
     if (bufferData) {
-      gl.bufferData(
-        bufferType || gl.ARRAY_BUFFER,
-        bufferData,
-        bufferDataDrawType || gl.STATIC_DRAW
-      );
+      gl.bufferData(bufferType || gl.ARRAY_BUFFER, bufferData, bufferDataDrawType || gl.STATIC_DRAW);
     }
     this.buffers[name] = buffer;
   }
@@ -172,8 +164,7 @@ export default class Scene {
   calcFPS() {
     if (!this.lastCalledTime) this.lastCalledTime = new Date().getTime();
     const delta = (new Date().getTime() - this.lastCalledTime) / 1000;
-    document.getElementById('fps_tracker').innerHTML =
-      (1.0 / delta).toFixed(2) + ' fps';
+    document.getElementById('fps_tracker').innerHTML = (1.0 / delta).toFixed(2) + ' fps';
     this.lastCalledTime = new Date().getTime();
     return delta;
   }

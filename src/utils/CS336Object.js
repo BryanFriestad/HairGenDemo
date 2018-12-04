@@ -232,9 +232,7 @@ class CS336Object {
    * Rotates the CS336Object ccw about the given axis, specified as a vector.
    */
   rotateOnAxis(degrees, x, y, z) {
-    this.rotation = new Matrix4.setRotate(degrees, x, y, z).multiply(
-      this.rotation
-    );
+    this.rotation = new Matrix4.setRotate(degrees, x, y, z).multiply(this.rotation);
     this.matrixNeedsUpdate = true;
   }
 
@@ -259,9 +257,7 @@ class CS336Object {
    * parallel to the vector (0, 1, 0).
    */
   turnLeft(degrees) {
-    this.rotation = new Matrix4()
-      .setRotate(degrees, 0, 1, 0)
-      .multiply(this.rotation);
+    this.rotation = new Matrix4().setRotate(degrees, 0, 1, 0).multiply(this.rotation);
     this.matrixNeedsUpdate = true;
   }
 

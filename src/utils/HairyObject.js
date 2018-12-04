@@ -6,22 +6,9 @@ import ChildHair from './ChildHair';
 import { ConstraintContainer } from './Constraint';
 
 export default class HairyObject extends CS336Object {
-  constructor({
-    drawFunction = () => {},
-    modelData = {},
-    drawHairFunction = () => {},
-    hairDensity = 0,
-    constraintContainer,
-  }) {
+  constructor({ drawFunction = () => {}, modelData = {}, drawHairFunction = () => {}, hairDensity = 0, constraintContainer }) {
     super(drawFunction);
-    const {
-      numVertices,
-      vertices,
-      normals,
-      vertexNormals,
-      reflectedNormals,
-      texCoords,
-    } = modelData;
+    const { numVertices, vertices, normals, vertexNormals, reflectedNormals, texCoords } = modelData;
     this.hairs = [];
     this.childHairs = [];
     this.constraints = [];
@@ -40,22 +27,14 @@ export default class HairyObject extends CS336Object {
   }
 
   // hashmap the vertices to aggregate the vertex pairs
-  generateHairs({
-    numVertices,
-    vertices,
-    normals,
-    vertexNormals,
-    constraintContainer,
-  }) {
+  generateHairs({ numVertices, vertices, normals, vertexNormals, constraintContainer }) {
     let vertexMap = {};
     for (let i = 0; i < numVertices; i++) {
       let [a, b, c] = vertices.slice(3 * i, 3 * i + 3);
       let abcNormals = vertexNormals.slice(3 * i, 3 * i + 3);
 
       const key = `${a},${b},${c}`;
-      let existingNormals = vertexMap[key]
-        ? vertexMap[key].v_normals || []
-        : [];
+      let existingNormals = vertexMap[key] ? vertexMap[key].v_normals || [] : [];
       vertexMap[key] = {
         v_base: [a, b, c],
         v_normals: [...existingNormals, abcNormals],
@@ -74,16 +53,8 @@ export default class HairyObject extends CS336Object {
         avgNormal[2] += v_normals[i][2];
       }
       // normalize normals
-      const norm = Math.sqrt(
-        avgNormal[0] * avgNormal[0] +
-          avgNormal[1] * avgNormal[1] +
-          avgNormal[2] * avgNormal[2]
-      );
-      avgNormal = [
-        avgNormal[0] / norm,
-        avgNormal[1] / norm,
-        avgNormal[2] / norm,
-      ];
+      const norm = Math.sqrt(avgNormal[0] * avgNormal[0] + avgNormal[1] * avgNormal[1] + avgNormal[2] * avgNormal[2]);
+      avgNormal = [avgNormal[0] / norm, avgNormal[1] / norm, avgNormal[2] / norm];
 
       const hairStrand = new HairStrand({
         length: 2.5,
@@ -105,11 +76,7 @@ export default class HairyObject extends CS336Object {
       let p2 = vertices.slice(i + 3, i + 6);
       let p3 = vertices.slice(i + 6, i + 9);
 
-      const parents = [
-        this.hairMap[this.vertexToKey(p1)],
-        this.hairMap[this.vertexToKey(p2)],
-        this.hairMap[this.vertexToKey(p3)],
-      ];
+      const parents = [this.hairMap[this.vertexToKey(p1)], this.hairMap[this.vertexToKey(p2)], this.hairMap[this.vertexToKey(p3)]];
 
       for (let j = 0; j < hairDensity; j++) {
         this.childHairs.push(
@@ -148,10 +115,7 @@ export default class HairyObject extends CS336Object {
     const currentWorld = new Matrix4(matrixWorld).multiply(this.getMatrix());
     for (let i = 0; i < this.hairs.length; i++) {
       this.hairs[i].render(matrixWorld, scene || this.scene);
-      this.hairs[i].rebase(
-        ...currentWorld.multiplyVector3(new Vector3(this.hairs[i].base))
-          .elements
-      );
+      this.hairs[i].rebase(...currentWorld.multiplyVector3(new Vector3(this.hairs[i].base)).elements);
     }
     for (let i = 0; i < this.childHairs.length; i++) {
       this.childHairs[i].render(matrixWorld, scene || this.scene);

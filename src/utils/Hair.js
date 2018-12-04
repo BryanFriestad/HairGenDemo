@@ -3,14 +3,7 @@ import VerletParticle from 'utils/VerletParticle.js';
 import { DistanceConstraint, ConstraintContainer } from 'utils/Constraint.js';
 
 class HairStrand {
-  constructor({
-    length = 1,
-    base = [0, 0, 0],
-    normal = [1, 1, 1],
-    drawFunction = () => {},
-    res = 8,
-    constraintContainer,
-  }) {
+  constructor({ length = 1, base = [0, 0, 0], normal = [1, 1, 1], drawFunction = () => {}, res = 8, constraintContainer }) {
     this.length = length;
     const [base_x, base_y, base_z] = base;
     this.base = base;
@@ -29,12 +22,9 @@ class HairStrand {
     //TODO: make this a parameter
 
     for (let i = 0; i < this.num_control_vertices; i++) {
-      let temp_x =
-        (i / (this.num_control_vertices - 1)) * normal_x * length + base_x;
-      let temp_y =
-        (i / (this.num_control_vertices - 1)) * normal_y * length + base_y;
-      let temp_z =
-        (i / (this.num_control_vertices - 1)) * normal_z * length + base_z;
+      let temp_x = (i / (this.num_control_vertices - 1)) * normal_x * length + base_x;
+      let temp_y = (i / (this.num_control_vertices - 1)) * normal_y * length + base_y;
+      let temp_z = (i / (this.num_control_vertices - 1)) * normal_z * length + base_z;
       //TODO: i just got thinking that there might be an issue here with the whole normal * length thing
       let pearl_radius = 0.1 + (0.1 * i) / (this.num_control_vertices - 1);
 
@@ -44,40 +34,16 @@ class HairStrand {
       let dampen_factor = 0.96 + this.getRandomWiggle(0.06);
       pearl_radius += this.getRandomWiggle(0.02);
       if (i == 0) {
-        this.verlet_parts.push(
-          new VerletParticle(
-            temp_x,
-            temp_y,
-            temp_z,
-            true,
-            dampen_factor,
-            pearl_radius
-          )
-        );
+        this.verlet_parts.push(new VerletParticle(temp_x, temp_y, temp_z, true, dampen_factor, pearl_radius));
       } else {
-        this.verlet_parts.push(
-          new VerletParticle(
-            temp_x,
-            temp_y,
-            temp_z,
-            false,
-            dampen_factor,
-            pearl_radius
-          )
-        );
+        this.verlet_parts.push(new VerletParticle(temp_x, temp_y, temp_z, false, dampen_factor, pearl_radius));
       }
     }
 
     if (constraintContainer) {
       let dist = length / (this.num_control_vertices - 1);
       for (let i = 0; i < this.verlet_parts.length - 1; i++) {
-        constraintContainer.add(
-          new DistanceConstraint(
-            this.verlet_parts[i],
-            this.verlet_parts[i + 1],
-            dist
-          )
-        );
+        constraintContainer.add(new DistanceConstraint(this.verlet_parts[i], this.verlet_parts[i + 1], dist));
       }
     }
 
@@ -154,54 +120,28 @@ class HairStrand {
         let x3 = p3[0];
         let y3 = p3[1];
         let z3 = p3[2];
-        this.bezier_control_vertices.push(
-          (length_factor * (x1 - x3)) / 2.0 + x2
-        );
-        this.bezier_control_vertices.push(
-          (length_factor * (y1 - y3)) / 2.0 + y2
-        );
-        this.bezier_control_vertices.push(
-          (length_factor * (z1 - z3)) / 2.0 + z2
-        );
+        this.bezier_control_vertices.push((length_factor * (x1 - x3)) / 2.0 + x2);
+        this.bezier_control_vertices.push((length_factor * (y1 - y3)) / 2.0 + y2);
+        this.bezier_control_vertices.push((length_factor * (z1 - z3)) / 2.0 + z2);
         this.bezier_control_vertices.push(x2);
         this.bezier_control_vertices.push(y2);
         this.bezier_control_vertices.push(z2);
-        this.bezier_control_vertices.push(
-          (length_factor * (x3 - x1)) / 2.0 + x2
-        );
-        this.bezier_control_vertices.push(
-          (length_factor * (y3 - y1)) / 2.0 + y2
-        );
-        this.bezier_control_vertices.push(
-          (length_factor * (z3 - z1)) / 2.0 + z2
-        );
+        this.bezier_control_vertices.push((length_factor * (x3 - x1)) / 2.0 + x2);
+        this.bezier_control_vertices.push((length_factor * (y3 - y1)) / 2.0 + y2);
+        this.bezier_control_vertices.push((length_factor * (z3 - z1)) / 2.0 + z2);
       }
     }
-    if (
-      this.bezier_control_vertices.length !=
-      3 * (3 * this.num_control_vertices - 6) + 12
-    ) {
-      console.log(
-        'Warning: something is wrong in generateBezierControlVertices'
-      );
-      console.log(
-        'BezierControlVertices length is: ' +
-          this.bezier_control_vertices.length
-      );
-      console.log(
-        'should be: ' + (3 * (3 * this.num_control_vertices - 6) + 12)
-      );
+    if (this.bezier_control_vertices.length != 3 * (3 * this.num_control_vertices - 6) + 12) {
+      console.log('Warning: something is wrong in generateBezierControlVertices');
+      console.log('BezierControlVertices length is: ' + this.bezier_control_vertices.length);
+      console.log('should be: ' + (3 * (3 * this.num_control_vertices - 6) + 12));
     }
   }
 
   generateFinalVertices(num_points) {
     let output = [];
     for (let i = 0; i < this.bezier_control_vertices.length - 1; i += 3) {
-      let p1 = new Vector3([
-        this.bezier_control_vertices[3 * i],
-        this.bezier_control_vertices[3 * i + 1],
-        this.bezier_control_vertices[3 * i + 2],
-      ]);
+      let p1 = new Vector3([this.bezier_control_vertices[3 * i], this.bezier_control_vertices[3 * i + 1], this.bezier_control_vertices[3 * i + 2]]);
       let p2 = new Vector3([
         this.bezier_control_vertices[3 * (i + 1)],
         this.bezier_control_vertices[3 * (i + 1) + 1],

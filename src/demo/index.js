@@ -28,11 +28,7 @@ const imageFilename = CheckerBoard;
 // light and material properties, remember this is column major
 
 // generic white light
-var lightPropElements = new Float32Array([
-  ...[0.2, 0.2, 0.2],
-  ...[0.7, 0.7, 0.7],
-  ...[0.7, 0.7, 0.7],
-]);
+var lightPropElements = new Float32Array([...[0.2, 0.2, 0.2], ...[0.7, 0.7, 0.7], ...[0.7, 0.7, 0.7]]);
 
 //very fake looking white, useful for testing lights
 // light and material properties, remember this is column major

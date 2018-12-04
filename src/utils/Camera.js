@@ -23,12 +23,7 @@ var Camera = function(fovy, aspect) {
   // view matrix is always the inverse of camera's translation * rotation
   // (initial rotation is the identity, so this is easy to initialize)
   this.viewMatrix = new Matrix4().setTranslate(0, 0, -5);
-  this.projectionMatrix = new Matrix4().setPerspective(
-    this.fovy,
-    this.aspect,
-    this.zNear,
-    this.zFar
-  );
+  this.projectionMatrix = new Matrix4().setPerspective(this.fovy, this.aspect, this.zNear, this.zFar);
 
   // flag to indicate whether projection need recalculation
   this.projectionNeedsUpdate = false;
@@ -72,12 +67,7 @@ Camera.prototype.getView = function() {
  * Returns the projection matrix for this camera.
  */
 Camera.prototype.getProjection = function() {
-  this.projectionMatrix = new Matrix4().setPerspective(
-    this.fovy,
-    this.aspect,
-    this.zNear,
-    this.zFar
-  );
+  this.projectionMatrix = new Matrix4().setPerspective(this.fovy, this.aspect, this.zNear, this.zFar);
   return this.projectionMatrix;
 };
 
