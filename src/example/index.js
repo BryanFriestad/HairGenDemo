@@ -60,6 +60,8 @@ let line_shader;
 let axis = 'y';
 let paused = true;
 let is_mesh = true;
+let rolling_buffer_length = 15;
+let rolling_buffer = [];
 
 let lightPosition = new Vector4([-4, 4, 4, 1]);
 
@@ -233,7 +235,8 @@ function startForReal(image) {
   function animate(timestamp) {
     // calculate duration since last animation frame
     if (!lastCalledTime) lastCalledTime = new Date().getTime();
-    let delta = (new Date().getTime() - lastCalledTime) / 1000;
+    updateRollingBuffer((new Date().getTime() - lastCalledTime) / 1000);
+    let delta = averageRollingBuffer();
     document.getElementById("fps_tracker").innerHTML = (1.0/delta).toFixed(2) + " fps";
     lastCalledTime = new Date().getTime();
 
@@ -373,6 +376,21 @@ function drawHair(matrix = new Matrix4()) {
 
   gl.disableVertexAttribArray(positionIndex);
   gl.useProgram(null);
+}
+
+function updateRollingBuffer(new_delta_t){
+  rolling_buffer.push(new_delta_t);
+  if(rolling_buffer.length > rolling_buffer_length){
+    rolling_buffer.shift();
+  }
+}
+
+function averageRollingBuffer(){
+  let sum = 0;
+  for(let i = 0; i < rolling_buffer.length; i++){
+    sum += rolling_buffer[i];
+  }
+  return (sum / rolling_buffer.length);
 }
 
 export default main;
