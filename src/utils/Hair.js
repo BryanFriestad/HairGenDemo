@@ -9,40 +9,40 @@ class HairStrand {
     this.base = base;
     const [normal_x, normal_y, normal_z] = normal;
     this.normal = normal;
-    // console.log({ base, normal });
+    if(res < 2){
+      console.log("Error: must be at least two control vertices");
+      return;
+    }
+
     //we are assuming that normal has already been normalized to one unit
     //additionally, one unit on the normal is one unit on the length
-    this.num_control_vertices = res; //this will create n-1 control hair segments
+    this.num_control_vertices = res; //this will create res-1 control hair segments
     this.verlet_parts = [];
     this.bezier_control_vertices = [];
     this.final_vertices;
     this.draw = drawFunction;
-    this.bezier_resolution = bez_res; //this is the number of final vertices between each control vertex
-    //4 is smooth enough for shorter hairs
-
-    for (let i = 0; i < this.num_control_vertices; i++) {
-      let temp_x = (i / (this.num_control_vertices - 1)) * normal_x * length + base_x;
-      let temp_y = (i / (this.num_control_vertices - 1)) * normal_y * length + base_y;
-      let temp_z = (i / (this.num_control_vertices - 1)) * normal_z * length + base_z;
-      //TODO: i just got thinking that there might be an issue here with the whole normal * length thing
-      let pearl_radius = 0.1 + (0.1 * i) / (this.num_control_vertices - 1);
-
-      temp_x += this.getRandomWiggle(0.02);
-      temp_y += this.getRandomWiggle(0.02);
-      temp_z += this.getRandomWiggle(0.02);
-      let dampen_factor = 0.96 + this.getRandomWiggle(0.06);
-      pearl_radius += this.getRandomWiggle(0.02);
-      if (i == 0) {
-        this.verlet_parts.push(new VerletParticle(temp_x, temp_y, temp_z, true, dampen_factor, pearl_radius));
-      } else {
-        this.verlet_parts.push(new VerletParticle(temp_x, temp_y, temp_z, false, dampen_factor, pearl_radius));
-      }
+    //this is the number of final vertices between each control vertex, 4 is smooth enough for shorter hairs
+    this.bezier_resolution = bez_res;
+    this.spread_factor = 2.0 / 3.0; //greater than 0, less than 1.0
+    this.min_pearl_rad = 0.1;
+    this.max_pearl_rad = 0.2;
+    if(this.max_pearl_rad < this.min_pearl_rad){
+      console.log("Error: maximum pearl radius is greater than minimum pearl radius");
+      return;
     }
 
+    this.generateInitialVerletParticles(normal_x, normal_y, normal_z, base_x, base_y, base_z);
+
     if (constraintContainer) {
-      let dist = length / (this.num_control_vertices - 1);
       for (let i = 0; i < this.verlet_parts.length - 1; i++) {
-        constraintContainer.add(new DistanceConstraint(this.verlet_parts[i], this.verlet_parts[i + 1], dist));
+        let p1_x = this.verlet_parts[i].position.elements[0];
+        let p1_y = this.verlet_parts[i].position.elements[1];
+        let p1_z = this.verlet_parts[i].position.elements[2];
+        let p2_x = this.verlet_parts[i + 1].position.elements[0];
+        let p2_y = this.verlet_parts[i + 1].position.elements[1];
+        let p2_z = this.verlet_parts[i + 1].position.elements[2];
+        let distance = Math.sqrt(Math.pow(p1_x - p2_x, 2) + Math.pow(p1_y - p2_y, 2) + Math.pow(p1_z - p2_z, 2));
+        constraintContainer.add(new DistanceConstraint(this.verlet_parts[i], this.verlet_parts[i + 1], distance));
       }
     }
 
@@ -188,6 +188,80 @@ class HairStrand {
       array.push(x);
       array.push(y);
       array.push(z);
+    }
+  }
+
+  generateInitialVerletParticles(normal_x, normal_y, normal_z, base_x, base_y, base_z){
+    //////ADD BASE AND TAIL VERLET PARTICLES TO ARRAY//////
+    let dampen_factor = 0.96 + this.getRandomWiggle(0.06);
+    this.verlet_parts.push(new VerletParticle(base_x, base_y, base_z, true, dampen_factor, this.min_pearl_rad)); //BASE
+
+    let temp_x = normal_x * this.length + base_x + this.getRandomWiggle(0.02);
+    let temp_y = normal_y * this.length + base_y + this.getRandomWiggle(0.02);
+    let temp_z = normal_z * this.length + base_z + this.getRandomWiggle(0.02);
+    dampen_factor = 0.96 + this.getRandomWiggle(0.06);
+    let pearl_radius = this.max_pearl_rad;
+    pearl_radius += this.getRandomWiggle(0.02);
+    this.verlet_parts.push(new VerletParticle(temp_x, temp_y, temp_z, false, dampen_factor, pearl_radius)); //TAIL
+    ////////////
+
+    if(this.spread_factor <= 0.5){
+      for (let i = 0; i < this.num_control_vertices - 2; i++) {
+        //the new part is spread_factor between the base and the following particle
+        let temp_x = (1 - this.spread_factor) * base_x + this.verlet_parts[1].position.elements[0] * this.spread_factor;
+        let temp_y = (1 - this.spread_factor) * base_y + this.verlet_parts[1].position.elements[1] * this.spread_factor;
+        let temp_z = (1 - this.spread_factor) * base_z + this.verlet_parts[1].position.elements[2] * this.spread_factor;
+        temp_x += this.getRandomWiggle(0.02);
+        temp_y += this.getRandomWiggle(0.02);
+        temp_z += this.getRandomWiggle(0.02);
+
+        let distanceFromBase = Math.sqrt(Math.pow(base_x - temp_x, 2) + Math.pow(base_y - temp_y, 2) + Math.pow(base_z - temp_z, 2));
+        let distanceFactor = distanceFromBase / this.length;
+        let pearl_radius = this.min_pearl_rad + ((this.max_pearl_rad - this.min_pearl_rad) * distanceFactor);
+
+        let dampen_factor = 0.96 + this.getRandomWiggle(0.06);
+        pearl_radius += this.getRandomWiggle(0.02);
+        //adds new verlet particle into index 1, shift all non-base parts to the right
+        this.verlet_parts.splice(1, 0, new VerletParticle(temp_x, temp_y, temp_z, false, dampen_factor, pearl_radius));
+      }
+    }
+    else{
+      for (let i = 0; i < this.num_control_vertices - 3; i++) {
+        //the new part is spread_factor between the base and the following particle
+        let temp_x = (1 - this.spread_factor) * base_x + this.verlet_parts[1].position.elements[0] * this.spread_factor;
+        let temp_y = (1 - this.spread_factor) * base_y + this.verlet_parts[1].position.elements[1] * this.spread_factor;
+        let temp_z = (1 - this.spread_factor) * base_z + this.verlet_parts[1].position.elements[2] * this.spread_factor;
+        temp_x += this.getRandomWiggle(0.02);
+        temp_y += this.getRandomWiggle(0.02);
+        temp_z += this.getRandomWiggle(0.02);
+
+        let distanceFromBase = Math.sqrt(Math.pow(base_x - temp_x, 2) + Math.pow(base_y - temp_y, 2) + Math.pow(base_z - temp_z, 2));
+        let distanceFactor = distanceFromBase / this.length;
+        let pearl_radius = this.min_pearl_rad + ((this.max_pearl_rad - this.min_pearl_rad) * distanceFactor);
+
+        let dampen_factor = 0.96 + this.getRandomWiggle(0.06);
+        pearl_radius += this.getRandomWiggle(0.02);
+        //adds new verlet particle into index 1, shift all non-base parts to the right
+        this.verlet_parts.splice(1, 0, new VerletParticle(temp_x, temp_y, temp_z, false, dampen_factor, pearl_radius));
+      }
+      if(this.num_control_vertices > 2){
+        //the last new part is half way between the base and the following particle
+        let temp_x = (base_x + this.verlet_parts[1].position.elements[0]) / 2;
+        let temp_y = (base_y + this.verlet_parts[1].position.elements[1]) / 2;
+        let temp_z = (base_z + this.verlet_parts[1].position.elements[2]) / 2;
+        temp_x += this.getRandomWiggle(0.02);
+        temp_y += this.getRandomWiggle(0.02);
+        temp_z += this.getRandomWiggle(0.02);
+
+        let distanceFromBase = Math.sqrt(Math.pow(base_x - temp_x, 2) + Math.pow(base_y - temp_y, 2) + Math.pow(base_z - temp_z, 2));
+        let distanceFactor = distanceFromBase / this.length;
+        let pearl_radius = this.min_pearl_rad + ((this.max_pearl_rad - this.min_pearl_rad) * distanceFactor);
+
+        let dampen_factor = 0.96 + this.getRandomWiggle(0.06);
+        pearl_radius += this.getRandomWiggle(0.02);
+        //adds new verlet particle into index 1, shift all non-base parts to the right
+        this.verlet_parts.splice(1, 0, new VerletParticle(temp_x, temp_y, temp_z, false, dampen_factor, pearl_radius));
+      }
     }
   }
 }
