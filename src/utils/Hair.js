@@ -3,7 +3,7 @@ import VerletParticle from 'utils/VerletParticle.js';
 import { DistanceConstraint, ConstraintContainer } from 'utils/Constraint.js';
 
 class HairStrand {
-  constructor({ length = 1, base = [0, 0, 0], normal = [1, 1, 1], drawFunction = () => {}, res = 8, constraintContainer }) {
+  constructor({ length = 1, base = [0, 0, 0], normal = [1, 1, 1], drawFunction = () => {}, res = 8, bez_res = 4, constraintContainer }) {
     this.length = length;
     const [base_x, base_y, base_z] = base;
     this.base = base;
@@ -17,9 +17,8 @@ class HairStrand {
     this.bezier_control_vertices = [];
     this.final_vertices;
     this.draw = drawFunction;
-    this.bezier_resolution = 4; //this is the number of final vertices between each control vertex
+    this.bezier_resolution = bez_res; //this is the number of final vertices between each control vertex
     //4 is smooth enough for shorter hairs
-    //TODO: make this a parameter
 
     for (let i = 0; i < this.num_control_vertices; i++) {
       let temp_x = (i / (this.num_control_vertices - 1)) * normal_x * length + base_x;

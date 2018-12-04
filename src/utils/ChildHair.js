@@ -2,7 +2,7 @@ import HairStrand from './Hair';
 import Vector from './Vector';
 
 export default class ChildHair extends HairStrand {
-  constructor(parents = Array(3), { drawFunction = () => {}, res = 8 }) {
+  constructor(parents = Array(3), { drawFunction = () => {}, res = 8, bez_res = 4}) {
     let length = 1;
     /*
      * By generating two random values in [0..1],
@@ -36,10 +36,11 @@ export default class ChildHair extends HairStrand {
 
     super({
       length: Y_length,
-      drawFunction,
-      res,
       base: Y_base.items,
       normal: Y_normal.items,
+      drawFunction,
+      res,
+      bez_res
     });
     this.parents = parents;
     this.b_A = b_A;

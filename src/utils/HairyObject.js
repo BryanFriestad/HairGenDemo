@@ -69,6 +69,7 @@ export default class HairyObject extends CS336Object {
         normal: avgNormal,
         drawFunction: this.drawHairFunction,
         res: this.res,
+        bez_res: 4,
         constraintContainer,
       });
       this.hairs.push(hairStrand);
@@ -90,6 +91,7 @@ export default class HairyObject extends CS336Object {
           new ChildHair(parents, {
             drawFunction: this.drawHairFunction,
             res: this.res,
+            bez_res: 4
           })
         );
       }
