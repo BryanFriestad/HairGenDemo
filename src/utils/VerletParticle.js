@@ -9,7 +9,7 @@ class VerletParticle {
     this.acceleration = new Vector3();
     this.fixed_pos = anchored;
     this.dampen_factor = damping;
-    this.pearl_radius = p_size; //the radius of the collision sphere //TODO: make this a passed parameter
+    this.pearl_radius = p_size; //the radius of the collision sphere
     if (this.fixed_pos) this.acceleration = new Vector3();
     else this.acceleration = new Vector3([0, -9.81, 0]);
   }
