@@ -52,24 +52,24 @@ export default class ChildHair extends HairStrand {
       weights: [this.b_A, this.b_B, this.b_C],
       parents: this.parents,
     });
-    for(let i = 0; i < this.final_vertices.length; i++){
+    for (let i = 0; i < this.final_vertices.length; i++) {
       allFinalVertices.push(this.final_vertices[i]);
     }
   }
 
-  interpolateParentHairs({ weights: [b_A, b_B, b_C], parents: [p_A, p_B, p_C] }){
+  interpolateParentHairs({ weights: [b_A, b_B, b_C], parents: [p_A, p_B, p_C] }) {
     let output = [];
     let num_final_verts = p_A.final_vertices.length;
-    if(num_final_verts != p_B.final_vertices.length){
-      console.log("Error: parent hairs have different number of final vertices");
+    if (num_final_verts != p_B.final_vertices.length) {
+      console.log('Error: parent hairs have different number of final vertices');
       return;
     }
-    if(num_final_verts != p_C.final_vertices.length){
-      console.log("Error: parent hairs have different number of final vertices");
+    if (num_final_verts != p_C.final_vertices.length) {
+      console.log('Error: parent hairs have different number of final vertices');
       return;
     }
 
-    for(let i = 0; i < num_final_verts; i++){
+    for (let i = 0; i < num_final_verts; i++) {
       let a = b_A * p_A.final_vertices[i];
       let b = b_B * p_B.final_vertices[i];
       let c = b_C * p_C.final_vertices[i];

@@ -14,35 +14,24 @@ export class DistanceConstraint extends Constraint {
   }
 
   solve() {
-    let diff_x =
-      this.particle1.position.elements[0] - this.particle2.position.elements[0];
-    let diff_y =
-      this.particle1.position.elements[1] - this.particle2.position.elements[1];
-    let diff_z =
-      this.particle1.position.elements[2] - this.particle2.position.elements[2];
-    let distance = Math.sqrt(
-      diff_x * diff_x + diff_y * diff_y + diff_z * diff_z
-    );
+    let diff_x = this.particle1.position.elements[0] - this.particle2.position.elements[0];
+    let diff_y = this.particle1.position.elements[1] - this.particle2.position.elements[1];
+    let diff_z = this.particle1.position.elements[2] - this.particle2.position.elements[2];
+    let distance = Math.sqrt(diff_x * diff_x + diff_y * diff_y + diff_z * diff_z);
     let scale = (this.restDistance - distance) / distance;
     let t_x = diff_x * 0.5 * scale;
     let t_y = diff_y * 0.5 * scale;
     let t_z = diff_z * 0.5 * scale;
 
     if (!this.particle1.fixed_pos) {
-      this.particle1.position.elements[0] =
-        this.particle1.position.elements[0] + t_x;
-      this.particle1.position.elements[1] =
-        this.particle1.position.elements[1] + t_y;
-      this.particle1.position.elements[2] =
-        this.particle1.position.elements[2] + t_z;
+      this.particle1.position.elements[0] = this.particle1.position.elements[0] + t_x;
+      this.particle1.position.elements[1] = this.particle1.position.elements[1] + t_y;
+      this.particle1.position.elements[2] = this.particle1.position.elements[2] + t_z;
     }
     if (!this.particle2.fixed_pos) {
-      this.particle2.position.elements[0] =
-        this.particle2.position.elements[0] - t_x;
-      this.particle2.position.elements[1] =
-        this.particle2.position.elements[1] - t_y;
-      this.particle2.position.elements[2] =
-        this.particle2.position.elements[2] - t_z;
+      this.particle2.position.elements[0] = this.particle2.position.elements[0] - t_x;
+      this.particle2.position.elements[1] = this.particle2.position.elements[1] - t_y;
+      this.particle2.position.elements[2] = this.particle2.position.elements[2] - t_z;
     }
   }
 }
@@ -54,37 +43,26 @@ export class PearlPearlConstraint extends Constraint {
   }
 
   solve() {
-    let diff_x =
-      this.particle1.position.elements[0] - this.particle2.position.elements[0];
-    let diff_y =
-      this.particle1.position.elements[1] - this.particle2.position.elements[1];
-    let diff_z =
-      this.particle1.position.elements[2] - this.particle2.position.elements[2];
-    let distance = Math.sqrt(
-      diff_x * diff_x + diff_y * diff_y + diff_z * diff_z
-    );
+    let diff_x = this.particle1.position.elements[0] - this.particle2.position.elements[0];
+    let diff_y = this.particle1.position.elements[1] - this.particle2.position.elements[1];
+    let diff_z = this.particle1.position.elements[2] - this.particle2.position.elements[2];
+    let distance = Math.sqrt(diff_x * diff_x + diff_y * diff_y + diff_z * diff_z);
     let minDist = this.particle1.pearl_radius + this.particle2.pearl_radius;
-    if(distance < minDist){
+    if (distance < minDist) {
       let scale = (minDist - distance) / distance;
       let t_x = diff_x * 0.5 * scale;
       let t_y = diff_y * 0.5 * scale;
       let t_z = diff_z * 0.5 * scale;
 
       if (!this.particle1.fixed_pos) {
-        this.particle1.position.elements[0] =
-          this.particle1.position.elements[0] + t_x;
-        this.particle1.position.elements[1] =
-          this.particle1.position.elements[1] + t_y;
-        this.particle1.position.elements[2] =
-          this.particle1.position.elements[2] + t_z;
+        this.particle1.position.elements[0] = this.particle1.position.elements[0] + t_x;
+        this.particle1.position.elements[1] = this.particle1.position.elements[1] + t_y;
+        this.particle1.position.elements[2] = this.particle1.position.elements[2] + t_z;
       }
       if (!this.particle2.fixed_pos) {
-        this.particle2.position.elements[0] =
-          this.particle2.position.elements[0] - t_x;
-        this.particle2.position.elements[1] =
-          this.particle2.position.elements[1] - t_y;
-        this.particle2.position.elements[2] =
-          this.particle2.position.elements[2] - t_z;
+        this.particle2.position.elements[0] = this.particle2.position.elements[0] - t_x;
+        this.particle2.position.elements[1] = this.particle2.position.elements[1] - t_y;
+        this.particle2.position.elements[2] = this.particle2.position.elements[2] - t_z;
       }
     }
   }
@@ -100,26 +78,27 @@ export class ConstraintContainer {
   }
 
   //adds pp constraints between the given hairs and object spheres
-  addHairObjectCollision(obj_pearls, hairs){
-    for(let i = 0; i < obj_pearls.length; i++){
-      for(let j = 0; j < hairs.length; j++){
+  addHairObjectCollision(obj_pearls, hairs) {
+    for (let i = 0; i < obj_pearls.length; i++) {
+      for (let j = 0; j < hairs.length; j++) {
         let parts = hairs[j].verlet_parts;
-        for(let k = 1; k < parts.length; k++){
+        for (let k = 1; k < parts.length; k++) {
           this.add(new PearlPearlConstraint(obj_pearls[i], parts[k]));
         }
       }
     }
   }
 
-  generatePPConstraints(particles){
-    for(let i = 0; i < particles.length; i++){
-      for(let j = i + 1; j < particles.length; j++){
+  generatePPConstraints(particles) {
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
         this.add(new PearlPearlConstraint(particles[i], particles[j]));
       }
     }
   }
 
-  solve(iterations = 10) { //i think 11 is too many, reduced to 5 iterations default
+  solve(iterations = 10) {
+    //i think 11 is too many, reduced to 5 iterations default
     for (let i = 0; i < iterations; i++) {
       for (let j = 0; j < this.constraints.length; j++) {
         this.constraints[j].solve();

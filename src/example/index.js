@@ -15,7 +15,7 @@ import VSHADER_SOURCE_LINES from './vshader_lines.glsl';
 import FSHADER_SOURCE_LINES from './fshader_lines.glsl';
 import CheckerBoard from './check64.png';
 
- let theModel = getModelData(new THREE.SphereGeometry(1, 12, 12));
+let theModel = getModelData(new THREE.SphereGeometry(1, 12, 12));
 // let theModel = getModelData(new THREE.SphereGeometry(1, 12, 12, 2, 4.3, 1, 2)); //this is a good mesh for the scalp (for hair extrusion, but not rendering)
 // let theModel = getModelData(new THREE.CubeGeometry(1, 1, 1, 1, 1, 1));
 // let theModel = getModelData(new THREE.PlaneGeometry());
@@ -29,11 +29,7 @@ const imageFilename = CheckerBoard;
 // light and material properties, remember this is column major
 
 // generic white light
-var lightPropElements = new Float32Array([
-  ...[0.2, 0.2, 0.2],
-  ...[0.7, 0.7, 0.7],
-  ...[0.7, 0.7, 0.7],
-]);
+var lightPropElements = new Float32Array([...[0.2, 0.2, 0.2], ...[0.7, 0.7, 0.7], ...[0.7, 0.7, 0.7]]);
 
 //very fake looking white, useful for testing lights
 // light and material properties, remember this is column major
@@ -237,7 +233,7 @@ function startForReal(image) {
     if (!lastCalledTime) lastCalledTime = new Date().getTime();
     updateRollingBuffer((new Date().getTime() - lastCalledTime) / 1000);
     let delta = averageRollingBuffer();
-    document.getElementById("fps_tracker").innerHTML = (1.0/delta).toFixed(2) + " fps";
+    document.getElementById('fps_tracker').innerHTML = (1.0 / delta).toFixed(2) + ' fps';
     lastCalledTime = new Date().getTime();
 
     constraintContainer.solve();
@@ -328,10 +324,9 @@ function drawCube(matrix = new Matrix4()) {
   loc = gl.getUniformLocation(shader, 'sampler');
   gl.uniform1i(loc, textureUnit);
 
-  if(is_mesh){
+  if (is_mesh) {
     gl.drawArrays(gl.TRIANGLES, 0, theModel.numVertices);
-  }
-  else{
+  } else {
     gl.drawArrays(gl.LINE_STRIP, 0, theModel.numVertices);
   }
 
@@ -370,27 +365,27 @@ function drawHair(matrix = new Matrix4()) {
 
   let num_hairs = cube.hairs.length + cube.childHairs.length;
   let num_verts_per_hair = cube.hairs[0].final_vertices.length;
-  for(let i = 0; i < num_hairs; i++){
-    gl.drawArrays(gl.LINE_STRIP, i * num_verts_per_hair / 3.0, num_verts_per_hair / 3.0);
+  for (let i = 0; i < num_hairs; i++) {
+    gl.drawArrays(gl.LINE_STRIP, (i * num_verts_per_hair) / 3.0, num_verts_per_hair / 3.0);
   }
 
   gl.disableVertexAttribArray(positionIndex);
   gl.useProgram(null);
 }
 
-function updateRollingBuffer(new_delta_t){
+function updateRollingBuffer(new_delta_t) {
   rolling_buffer.push(new_delta_t);
-  if(rolling_buffer.length > rolling_buffer_length){
+  if (rolling_buffer.length > rolling_buffer_length) {
     rolling_buffer.shift();
   }
 }
 
-function averageRollingBuffer(){
+function averageRollingBuffer() {
   let sum = 0;
-  for(let i = 0; i < rolling_buffer.length; i++){
+  for (let i = 0; i < rolling_buffer.length; i++) {
     sum += rolling_buffer[i];
   }
-  return (sum / rolling_buffer.length);
+  return sum / rolling_buffer.length;
 }
 
 export default main;
