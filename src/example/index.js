@@ -15,7 +15,7 @@ import VSHADER_SOURCE_LINES from './vshader_lines.glsl';
 import FSHADER_SOURCE_LINES from './fshader_lines.glsl';
 import CheckerBoard from './check64.png';
 
- let theModel = getModelData(new THREE.SphereGeometry(1, 8, 8));
+let theModel = getModelData(new THREE.SphereGeometry(1, 8, 8));
 // let theModel = getModelData(new THREE.CubeGeometry(1, 1, 1, 1, 1, 1));
 //let theModel = getModelData(new THREE.PlaneGeometry());
 
@@ -229,7 +229,8 @@ function startForReal(image) {
     // calculate duration since last animation frame
     if (!lastCalledTime) lastCalledTime = new Date().getTime();
     let delta = (new Date().getTime() - lastCalledTime) / 1000;
-    document.getElementById("fps_tracker").innerHTML = (1.0/delta).toFixed(2) + " fps";
+    document.getElementById('fps_tracker').innerHTML =
+      (1.0 / delta).toFixed(2) + ' fps';
     lastCalledTime = new Date().getTime();
 
     constraintContainer.solve();

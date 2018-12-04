@@ -143,23 +143,26 @@ export default class HairyObject extends CS336Object {
     }
   }
 
-  render(matrixWorld) {
-    super.render(matrixWorld);
+  render(matrixWorld, scene) {
+    super.render(matrixWorld, scene || this.scene);
     const currentWorld = new Matrix4(matrixWorld).multiply(this.getMatrix());
     for (let i = 0; i < this.hairs.length; i++) {
-      this.hairs[i].render(matrixWorld);
-      this.hairs[i].rebase(...currentWorld.multiplyVector3(new Vector3(this.hairs[i].base)).elements);
+      this.hairs[i].render(matrixWorld, scene || this.scene);
+      this.hairs[i].rebase(
+        ...currentWorld.multiplyVector3(new Vector3(this.hairs[i].base))
+          .elements
+      );
     }
     for (let i = 0; i < this.childHairs.length; i++) {
-      this.childHairs[i].render(matrixWorld);
+      this.childHairs[i].render(matrixWorld, scene || this.scene);
     }
   }
 
-  getParticles(includeChild){
+  getParticles(includeChild) {
     let output = [];
-    for(let i = 0; i < this.hairs.length; i++){
+    for (let i = 0; i < this.hairs.length; i++) {
       let temp = this.hairs[i].verlet_parts;
-      for(let j = 0; j < temp.length; j++){
+      for (let j = 0; j < temp.length; j++) {
         output.push(temp[j]);
       }
     }

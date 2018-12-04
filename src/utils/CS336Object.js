@@ -34,6 +34,10 @@ class CS336Object {
     this.drawObject = drawFunction || function() {};
   }
 
+  setScene(scene) {
+    this.scene = scene;
+  }
+
   /**
    * Sets the position.
    * @param x
@@ -106,16 +110,16 @@ class CS336Object {
    * @param matrixWorld
    *   frame transformation for this object's parent
    */
-  render(matrixWorld) {
+  render(matrixWorld, scene) {
     // clone and update the world matrix
     var currentWorld = new Matrix4(matrixWorld).multiply(this.getMatrix());
 
     // invoke callback
-    this.drawObject(currentWorld);
+    this.drawObject(currentWorld, scene || this.scene);
 
     // recurse through children using current world matrix
     for (var i = 0; i < this.children.length; ++i) {
-      this.children[i].render(currentWorld);
+      this.children[i].render(currentWorld, scene || this.scene);
     }
   }
 
