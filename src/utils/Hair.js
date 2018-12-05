@@ -287,4 +287,10 @@ class HairStrand {
   }
 }
 
+export const SpreadType = Object.freeze({
+  EVEN: 1,
+  LOGARITHMIC: 2,
+  OTHER: 3
+});
+
 export default HairStrand;
