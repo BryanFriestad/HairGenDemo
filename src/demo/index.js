@@ -38,10 +38,12 @@ let axis = 'y';
 let paused = true;
 let is_mesh = true;
 let hairDensity = 5;
+let moveSpeed = 0.1;
 
 let lightPosition = new Vector4([-4, 4, 4, 1]);
 
 let scene;
+let resetScene = () => {};
 
 function resetConstraints() {
   constraintContainer = new ConstraintContainer();
@@ -80,16 +82,25 @@ function defaultKeyboardControls(event, ch) {
       is_mesh = !is_mesh;
       break;
     case 'w':
-      scene.meshes.forEach(mesh => mesh.object.moveForward(0.05));
+      scene.meshes.forEach(mesh => mesh.object.moveForward(moveSpeed));
       break;
     case 'a':
-      scene.meshes.forEach(mesh => mesh.object.moveLeft(0.05));
+      scene.meshes.forEach(mesh => mesh.object.moveLeft(moveSpeed));
       break;
     case 's':
-      scene.meshes.forEach(mesh => mesh.object.moveBack(0.05));
+      scene.meshes.forEach(mesh => mesh.object.moveBack(moveSpeed));
       break;
     case 'd':
-      scene.meshes.forEach(mesh => mesh.object.moveRight(0.05));
+      scene.meshes.forEach(mesh => mesh.object.moveRight(moveSpeed));
+      break;
+    case 'q':
+      scene.meshes.forEach(mesh => mesh.object.moveUp(moveSpeed));
+      break;
+    case 'e':
+      scene.meshes.forEach(mesh => mesh.object.moveDown(moveSpeed));
+      break;
+    case 'r':
+      resetScene();
       break;
   }
 }
@@ -326,8 +337,11 @@ class HairyMesh {
 function createSceneTab(sceneConfig, label) {
   const tab = document.createElement('button');
   tab.addEventListener('click', () => {
-    resetConstraints();
-    sceneConfig.init();
+    resetScene = () => {
+      resetConstraints();
+      sceneConfig.init();
+    };
+    resetScene();
   });
   tab.innerText = label;
   return tab;

@@ -82,15 +82,21 @@ ul {
             <label>Hair Density:</label>
             <input type="range" id="hair-density-slider" min="0" max="15" step="1" value="5">
           </div>
-
+          <div>
+            <label>Move Speed:</label>
+            <input type="range" id="move-speed-slider" min="0" max="0.5" step="0.05" value="0.1">
+          </div>
         </form>
       </div>
       <div id="keyboard-controls">
         <h3>Keyboard controls:</h3>
         <ul>
+          <li><strong>[ r ]</strong> - reloads scene</li>
           <li><strong>[ m ]</strong> - toggles mesh view/wirefram view</li>
           <li><strong>[ space ]</strong> - start/stop object rotation</li>
           <li><strong>[ x/y/z ]</strong> - rotate around internal axis</li>
+          <li><strong>[ w/a/s/d ]</strong> - move objects forward/left/back/right</li>
+          <li><strong>[ q/e ]</strong> - move objects up/down</li>
         </ul>
       </div>
       <div id="fps_tracker"></div>
