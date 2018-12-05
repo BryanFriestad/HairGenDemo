@@ -13,8 +13,10 @@ export default class HairyObject extends CS336Object {
     this.hairs = [];
     this.childHairs = [];
     this.constraints = [];
-    this.res = 5; //5 is a good medium between fast and smooth
+    this.res = 7; //5 is a good medium between fast and smooth
+    this.bez_res = 4;
     this.drawHairFunction = drawHairFunction;
+    this.spread_type = 1;
     this.object_pearls = []; //a list of the verlet particles that the hairs can collide with
     this.object_pearls.push(new VerletParticle(this.position.elements[0], this.position.elements[1], this.position.elements[2], true, 0, 2));
     this.generateHairs({
@@ -69,7 +71,8 @@ export default class HairyObject extends CS336Object {
         normal: avgNormal,
         drawFunction: this.drawHairFunction,
         res: this.res,
-        bez_res: 4,
+        bez_res: this.bez_res,
+        s_type: this.spread_type,
         constraintContainer,
       });
       this.hairs.push(hairStrand);
@@ -91,7 +94,8 @@ export default class HairyObject extends CS336Object {
           new ChildHair(parents, {
             drawFunction: this.drawHairFunction,
             res: this.res,
-            bez_res: 4
+            bez_res: this.bez_res,
+            s_type: this.spread_type
           })
         );
       }
@@ -103,14 +107,6 @@ export default class HairyObject extends CS336Object {
   }
 
   update(delta_t, allFinalVertices) {
-    // if (Math.random() > 0.08) {
-    //   let rand_hair = Math.floor(Math.random() * this.hairs.length);
-    //   this.hairs[rand_hair].rebase(
-    //     Math.random() * 8 - 4,
-    //     0,
-    //     Math.random() * 8 - 4
-    //   );
-    // }
     for (let i = 0; i < this.hairs.length; i++) {
       this.hairs[i].update(delta_t, allFinalVertices);
     }
@@ -126,9 +122,6 @@ export default class HairyObject extends CS336Object {
     for (let i = 0; i < this.hairs.length; i++) {
       //this.hairs[i].render(new Matrix4());
       this.hairs[i].rebase(...currentWorld.multiplyVector3(new Vector3(this.hairs[i].base)).elements);
-    }
-    for (let i = 0; i < this.childHairs.length; i++) {
-      //this.childHairs[i].render(new Matrix4());
     }
   }
 

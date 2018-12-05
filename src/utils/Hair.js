@@ -3,7 +3,7 @@ import VerletParticle from 'utils/VerletParticle.js';
 import { DistanceConstraint, ConstraintContainer } from 'utils/Constraint.js';
 
 class HairStrand {
-  constructor({ length = 1, base = [0, 0, 0], normal = [1, 1, 1], drawFunction = () => {}, res = 8, bez_res = 4, constraintContainer }) {
+  constructor({ length = 1, base = [0, 0, 0], normal = [1, 1, 1], drawFunction = () => {}, res = 8, bez_res = 4, s_type = 1, constraintContainer }) {
     this.length = length;
     const [base_x, base_y, base_z] = base;
     this.base = base;
@@ -17,13 +17,14 @@ class HairStrand {
     //we are assuming that normal has already been normalized to one unit
     //additionally, one unit on the normal is one unit on the length
     this.num_control_vertices = res; //this will create res-1 control hair segments
+    this.bezier_resolution = bez_res; //number of final vertices between each control vertex
+
     this.verlet_parts = [];
     this.bezier_control_vertices = [];
     this.final_vertices;
     this.draw = drawFunction;
-    //this is the number of final vertices between each control vertex, 4 is smooth enough for shorter hairs
-    this.bezier_resolution = bez_res;
-    this.spread_factor = 2.0 / 3.0; //greater than 0, less than 1.0
+
+    this.spread_type = s_type;
     this.min_pearl_rad = 0.1;
     this.max_pearl_rad = 0.2;
     if(this.max_pearl_rad < this.min_pearl_rad){
@@ -31,7 +32,7 @@ class HairStrand {
       return;
     }
 
-    this.generateInitialVerletParticles(normal_x, normal_y, normal_z, base_x, base_y, base_z);
+    this.generateInitialVerletParticles(normal_x, normal_y, normal_z, base_x, base_y, base_z, this.spread_type);
 
     if (constraintContainer) {
       for (let i = 0; i < this.verlet_parts.length - 1; i++) {
@@ -191,7 +192,13 @@ class HairStrand {
     }
   }
 
-  generateInitialVerletParticles(normal_x, normal_y, normal_z, base_x, base_y, base_z){
+  /**
+   * There will be three styles for verlet particle spreads
+   * 1 - each hair segment is the same length
+   * 2 - each new hair segment cuts the base and the following vertex in half
+   * 3 - spread factor of 2/3 with the base to 1 and 1 to 2 segments being equal length
+   */
+  generateInitialVerletParticles(normal_x, normal_y, normal_z, base_x, base_y, base_z, spread_type){
     //////ADD BASE AND TAIL VERLET PARTICLES TO ARRAY//////
     let dampen_factor = 0.96 + this.getRandomWiggle(0.06);
     this.verlet_parts.push(new VerletParticle(base_x, base_y, base_z, true, dampen_factor, this.min_pearl_rad)); //BASE
@@ -205,63 +212,77 @@ class HairStrand {
     this.verlet_parts.push(new VerletParticle(temp_x, temp_y, temp_z, false, dampen_factor, pearl_radius)); //TAIL
     ////////////
 
-    if(this.spread_factor <= 0.5){
-      for (let i = 0; i < this.num_control_vertices - 2; i++) {
-        //the new part is spread_factor between the base and the following particle
-        let temp_x = (1 - this.spread_factor) * base_x + this.verlet_parts[1].position.elements[0] * this.spread_factor;
-        let temp_y = (1 - this.spread_factor) * base_y + this.verlet_parts[1].position.elements[1] * this.spread_factor;
-        let temp_z = (1 - this.spread_factor) * base_z + this.verlet_parts[1].position.elements[2] * this.spread_factor;
-        temp_x += this.getRandomWiggle(0.02);
-        temp_y += this.getRandomWiggle(0.02);
-        temp_z += this.getRandomWiggle(0.02);
+    switch(spread_type){
+      case 1:
+        for (let i = 1; i < this.num_control_vertices - 1; i++) {
+          let distanceFactor = i / (this.num_control_vertices - 1);
+          let temp_x = base_x + (this.length * normal_x * distanceFactor);
+          let temp_y = base_y + (this.length * normal_y * distanceFactor);
+          let temp_z = base_z + (this.length * normal_z * distanceFactor);
+          temp_x += this.getRandomWiggle(0.02);
+          temp_y += this.getRandomWiggle(0.02);
+          temp_z += this.getRandomWiggle(0.02);
 
-        let distanceFromBase = Math.sqrt(Math.pow(base_x - temp_x, 2) + Math.pow(base_y - temp_y, 2) + Math.pow(base_z - temp_z, 2));
-        let distanceFactor = distanceFromBase / this.length;
-        let pearl_radius = this.min_pearl_rad + ((this.max_pearl_rad - this.min_pearl_rad) * distanceFactor);
+          let pearl_radius = this.min_pearl_rad + ((this.max_pearl_rad - this.min_pearl_rad) * distanceFactor);
 
-        let dampen_factor = 0.96 + this.getRandomWiggle(0.06);
-        pearl_radius += this.getRandomWiggle(0.02);
-        //adds new verlet particle into index 1, shift all non-base parts to the right
-        this.verlet_parts.splice(1, 0, new VerletParticle(temp_x, temp_y, temp_z, false, dampen_factor, pearl_radius));
-      }
-    }
-    else{
-      for (let i = 0; i < this.num_control_vertices - 3; i++) {
-        //the new part is spread_factor between the base and the following particle
-        let temp_x = (1 - this.spread_factor) * base_x + this.verlet_parts[1].position.elements[0] * this.spread_factor;
-        let temp_y = (1 - this.spread_factor) * base_y + this.verlet_parts[1].position.elements[1] * this.spread_factor;
-        let temp_z = (1 - this.spread_factor) * base_z + this.verlet_parts[1].position.elements[2] * this.spread_factor;
-        temp_x += this.getRandomWiggle(0.02);
-        temp_y += this.getRandomWiggle(0.02);
-        temp_z += this.getRandomWiggle(0.02);
+          let dampen_factor = 0.96 + this.getRandomWiggle(0.06);
+          pearl_radius += this.getRandomWiggle(0.02);
+          //adds new verlet particle into index 1, shift all non-base parts to the right
+          this.verlet_parts.splice(i, 0, new VerletParticle(temp_x, temp_y, temp_z, false, dampen_factor, pearl_radius));
+        }
+        break;
 
-        let distanceFromBase = Math.sqrt(Math.pow(base_x - temp_x, 2) + Math.pow(base_y - temp_y, 2) + Math.pow(base_z - temp_z, 2));
-        let distanceFactor = distanceFromBase / this.length;
-        let pearl_radius = this.min_pearl_rad + ((this.max_pearl_rad - this.min_pearl_rad) * distanceFactor);
+      case 2:
+        for (let i = 1; i < this.num_control_vertices - 1; i++) {
+          //the new part is half way between the base and the following particle
+          let temp_x = (base_x + this.verlet_parts[1].position.elements[0]) / 2;
+          let temp_y = (base_y + this.verlet_parts[1].position.elements[1]) / 2;
+          let temp_z = (base_z + this.verlet_parts[1].position.elements[2]) / 2;
+          temp_x += this.getRandomWiggle(0.02);
+          temp_y += this.getRandomWiggle(0.02);
+          temp_z += this.getRandomWiggle(0.02);
 
-        let dampen_factor = 0.96 + this.getRandomWiggle(0.06);
-        pearl_radius += this.getRandomWiggle(0.02);
-        //adds new verlet particle into index 1, shift all non-base parts to the right
-        this.verlet_parts.splice(1, 0, new VerletParticle(temp_x, temp_y, temp_z, false, dampen_factor, pearl_radius));
-      }
-      if(this.num_control_vertices > 2){
-        //the last new part is half way between the base and the following particle
-        let temp_x = (base_x + this.verlet_parts[1].position.elements[0]) / 2;
-        let temp_y = (base_y + this.verlet_parts[1].position.elements[1]) / 2;
-        let temp_z = (base_z + this.verlet_parts[1].position.elements[2]) / 2;
-        temp_x += this.getRandomWiggle(0.02);
-        temp_y += this.getRandomWiggle(0.02);
-        temp_z += this.getRandomWiggle(0.02);
+          let distanceFromBase = Math.sqrt(Math.pow(base_x - temp_x, 2) + Math.pow(base_y - temp_y, 2) + Math.pow(base_z - temp_z, 2));
+          let distanceFactor = distanceFromBase / this.length;
+          let pearl_radius = this.min_pearl_rad + ((this.max_pearl_rad - this.min_pearl_rad) * distanceFactor);
 
-        let distanceFromBase = Math.sqrt(Math.pow(base_x - temp_x, 2) + Math.pow(base_y - temp_y, 2) + Math.pow(base_z - temp_z, 2));
-        let distanceFactor = distanceFromBase / this.length;
-        let pearl_radius = this.min_pearl_rad + ((this.max_pearl_rad - this.min_pearl_rad) * distanceFactor);
+          let dampen_factor = 0.96 + this.getRandomWiggle(0.06);
+          pearl_radius += this.getRandomWiggle(0.02);
+          //adds new verlet particle into index 1, shift all non-base parts to the right
+          this.verlet_parts.splice(1, 0, new VerletParticle(temp_x, temp_y, temp_z, false, dampen_factor, pearl_radius));
+        }
+        break;
 
-        let dampen_factor = 0.96 + this.getRandomWiggle(0.06);
-        pearl_radius += this.getRandomWiggle(0.02);
-        //adds new verlet particle into index 1, shift all non-base parts to the right
-        this.verlet_parts.splice(1, 0, new VerletParticle(temp_x, temp_y, temp_z, false, dampen_factor, pearl_radius));
-      }
+      case 3:
+        if(this.num_control_vertices <= 2){
+          return;
+        }
+        let spread_factor = 2.0/3.0;
+        for (let i = 1; i < this.num_control_vertices - 1; i++) {
+          //the new part is half way between the base and the following particle
+          if(i == this.num_control_vertices - 3){
+            spread_factor = 0.5;
+          }
+          let temp_x = (1 - spread_factor) * base_x + this.verlet_parts[1].position.elements[0] * spread_factor;
+          let temp_y = (1 - spread_factor) * base_y + this.verlet_parts[1].position.elements[1] * spread_factor;
+          let temp_z = (1 - spread_factor) * base_z + this.verlet_parts[1].position.elements[2] * spread_factor;
+          temp_x += this.getRandomWiggle(0.02);
+          temp_y += this.getRandomWiggle(0.02);
+          temp_z += this.getRandomWiggle(0.02);
+
+          let distanceFromBase = Math.sqrt(Math.pow(base_x - temp_x, 2) + Math.pow(base_y - temp_y, 2) + Math.pow(base_z - temp_z, 2));
+          let distanceFactor = distanceFromBase / this.length;
+          let pearl_radius = this.min_pearl_rad + ((this.max_pearl_rad - this.min_pearl_rad) * distanceFactor);
+
+          let dampen_factor = 0.96 + this.getRandomWiggle(0.06);
+          pearl_radius += this.getRandomWiggle(0.02);
+          //adds new verlet particle into index 1, shift all non-base parts to the right
+          this.verlet_parts.splice(1, 0, new VerletParticle(temp_x, temp_y, temp_z, false, dampen_factor, pearl_radius));
+        }
+        break;
+
+      default:
+        console.log("Error: invalid verlet particle spread type");
     }
   }
 }
