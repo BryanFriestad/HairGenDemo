@@ -8,18 +8,99 @@
       <%= ops.title %>
     </title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  margin: 0;
+  padding: 0;
+}
+body * {
+  position: relative;
+  box-sizing: border-box;
+}
+body > div {
+  margin: 1rem;
+}
+#fps_tracker {
+  color: #45FF4C;
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+}
+.root-wrapper {
+  display: flex;
+}
+.root-wrapper > * ~ *:not(#fps_tracker) {
+  margin-left: 1rem;
+  padding-left: 1rem;
+}
+.root-wrapper > * ~ *:not(#fps_tracker)::before {
+  position: absolute;
+  left: 0;
+  top: 2%;
+  height: 96%;
+  width: 1px;
+  background: #dedeef;
+  content: "";
+}
+#theCanvas {
+  box-shadow: 0 13px 27px -5px rgba(50,50,93,.25), 0 8px 16px -8px rgba(0,0,0,.3);
+}
+button {
+  border: none;
+  padding: 0.25rem 0.5rem;
+  color: #fefeff;
+  font: inherit;
+  margin-right: 0.3rem;
+  border-radius: 3px;
+  background: #7795f8;
+  box-shadow: 0 4px 6px rgba(50,50,93,.11), 0 1px 3px rgba(0,0,0,.08);
+}
+button:hover {
+  cursor: pointer;
+  background: #555abf;
+  box-shadow: 0 7px 14px rgba(50,50,93,.1), 0 3px 6px rgba(0,0,0,.08);
+}
+ul {
+  list-style: none;
+  padding-left: 0.5rem;
+}
+    </style>
   </head>
   <body>
-    <h3 id="fps_tracker" style="z-index: 10; color: red; position:absolute;"></h3>
-    <div id="root"></div>
+    <div id="tab-bar"></div>
+    <div class="root-wrapper">
+      <div id="root"></div>
+      <div id="controls_form">
+        <h3>Form Controls</h3>
+        <form>
+          <div>
+            <label>Model:</label>
+            <div id="model-input-group"></div>
+          </div>
+          <div>
+            <label>Hair Density:</label>
+            <input type="range" id="hair-density-slider" min="0" max="15" step="1" value="5">
+          </div>
+          <div>
+            <label>Move Speed:</label>
+            <input type="range" id="move-speed-slider" min="0" max="0.5" step="0.05" value="0.1">
+          </div>
+        </form>
+      </div>
+      <div id="keyboard-controls">
+        <h3>Keyboard controls:</h3>
+        <ul>
+          <li><strong>[ r ]</strong> - reloads scene</li>
+          <li><strong>[ m ]</strong> - toggles mesh view/wirefram view</li>
+          <li><strong>[ space ]</strong> - start/stop object rotation</li>
+          <li><strong>[ x/y/z ]</strong> - rotate around internal axis</li>
+          <li><strong>[ w/a/s/d ]</strong> - move objects forward/left/back/right</li>
+          <li><strong>[ q/e ]</strong> - move objects up/down</li>
+        </ul>
+      </div>
+      <div id="fps_tracker"></div>
+    </div>
 
-    <p>
-      Keyboard controls:
-      <ul style="list-style:none; position:absolute; bottom:0px;">
-        <li>m - toggles mesh view/wirefram view</li>
-        <li>Space - start/stop object rotation</li>
-        <li>x/y/z - rotate around internal axis</li>
-      </ul>
-    </p>
   </body>
 </html>

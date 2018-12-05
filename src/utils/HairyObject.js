@@ -117,8 +117,10 @@ export default class HairyObject extends CS336Object {
     const currentWorld = new Matrix4(matrixWorld).multiply(this.getMatrix());
     this.hairs[0].render(new Matrix4(), scene || this.scene);
     for (let i = 0; i < this.hairs.length; i++) {
-      //this.hairs[i].render(new Matrix4());
       this.hairs[i].rebase(...currentWorld.multiplyVector3(new Vector3(this.hairs[i].base)).elements);
+    }
+    for (let i = 0; i < this.object_pearls.length; i++) {
+      this.object_pearls[i].setPosition(...currentWorld.multiplyVector3(new Vector3(this.object_pearls[i].position.elements)).elements);
     }
   }
 

@@ -135,7 +135,7 @@ export default class Scene {
     const canvas = document.getElementById('theCanvas');
     this.canvas = canvas;
 
-    window.addEventListener('keypress', this.handleKeyPress.bind(this));
+    this.keypressListener = window.addEventListener('keypress', this.handleKeyPress.bind(this));
 
     this.gl = getWebGLContext(canvas, false);
     const gl = this.gl;
@@ -161,7 +161,7 @@ export default class Scene {
     const delta = this.calcFPS();
     this.additionalAnimation(delta);
     this.render();
-    requestAnimationFrame(this.animate.bind(this), this.canvas);
+    this.animationFrame = requestAnimationFrame(this.animate.bind(this), this.canvas);
   }
 
   calcFPS() {
@@ -190,5 +190,10 @@ export default class Scene {
 
   start() {
     this.loadImages();
+  }
+
+  end() {
+    cancelAnimationFrame(this.animationFrame);
+    window.removeEventListener('keypress', this.keypressListener);
   }
 }

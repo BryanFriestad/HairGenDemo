@@ -38,7 +38,7 @@ class VerletParticle {
   }
 
   setPosition(x, y, z) {
-    this.prevPosition = this.position;
+    this.prevPosition = new Vector3(this.position.elements);
     this.position = new Vector3([x, y, z]);
   }
 }
