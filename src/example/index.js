@@ -15,12 +15,14 @@ import VSHADER_SOURCE_LINES from './vshader_lines.glsl';
 import FSHADER_SOURCE_LINES from './fshader_lines.glsl';
 import CheckerBoard from './check64.png';
 
-let theModel = getModelData(new THREE.SphereGeometry(1, 8, 8));
+let theModel = getModelData(new THREE.SphereGeometry(1, 12, 12));
+// let theModel = getModelData(new THREE.SphereGeometry(1, 12, 12, 2, 4.3, 1, 2)); //this is a good mesh for the scalp (for hair extrusion, but not rendering)
 // let theModel = getModelData(new THREE.CubeGeometry(1, 1, 1, 1, 1, 1));
-//let theModel = getModelData(new THREE.PlaneGeometry());
+// let theModel = getModelData(new THREE.PlaneGeometry());
 
 // Initialize constraint container for global storage of constraints
 const constraintContainer = new ConstraintContainer();
+let allFinalVertices = [];
 
 const imageFilename = CheckerBoard;
 
@@ -53,14 +55,17 @@ let line_shader;
 
 let axis = 'y';
 let paused = true;
+let is_mesh = true;
+let rolling_buffer_length = 15;
+let rolling_buffer = [];
 
 let lightPosition = new Vector4([-4, 4, 4, 1]);
 
 //view matrix
 let view = new Matrix4().setLookAt(
-  5,
-  5,
-  5, // eye
+  12,
+  12,
+  12, // eye
   0,
   0,
   0, // at - looking at the origin
@@ -107,6 +112,8 @@ function handleKeyPress(event) {
     case 'z':
       axis = 'z';
       break;
+    case 'm':
+      is_mesh = !is_mesh;
   }
 }
 
@@ -218,19 +225,22 @@ function startForReal(image) {
 
   //final setup for demo
   let lastCalledTime;
-  constraintContainer.generatePPConstraints(cube.getParticles(false));
+  //constraintContainer.generatePPConstraints(cube.getParticles(false));
 
   // define an animation loop
   function animate(timestamp) {
     // calculate duration since last animation frame
     if (!lastCalledTime) lastCalledTime = new Date().getTime();
-    let delta = (new Date().getTime() - lastCalledTime) / 1000;
+    updateRollingBuffer((new Date().getTime() - lastCalledTime) / 1000);
+    let delta = averageRollingBuffer();
     document.getElementById('fps_tracker').innerHTML = (1.0 / delta).toFixed(2) + ' fps';
     lastCalledTime = new Date().getTime();
 
     constraintContainer.solve();
-    cube.update(delta);
+    cube.update(delta, allFinalVertices);
+    allFinalVertices = new Float32Array(allFinalVertices);
     render();
+    allFinalVertices = [];
 
     let increment = 1.5 * 60 * delta;
     if (!paused) {
@@ -314,7 +324,11 @@ function drawCube(matrix = new Matrix4()) {
   loc = gl.getUniformLocation(shader, 'sampler');
   gl.uniform1i(loc, textureUnit);
 
-  gl.drawArrays(gl.LINE_STRIP, 0, theModel.numVertices);
+  if (is_mesh) {
+    gl.drawArrays(gl.TRIANGLES, 0, theModel.numVertices);
+  } else {
+    gl.drawArrays(gl.LINE_STRIP, 0, theModel.numVertices);
+  }
 
   gl.disableVertexAttribArray(normalIndex);
   gl.disableVertexAttribArray(positionIndex);
@@ -334,7 +348,7 @@ function drawHair(matrix = new Matrix4()) {
   gl.enableVertexAttribArray(positionIndex);
 
   gl.bindBuffer(gl.ARRAY_BUFFER, hairVertexBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, this.final_vertices, gl.STATIC_DRAW);
+  gl.bufferData(gl.ARRAY_BUFFER, allFinalVertices, gl.STATIC_DRAW);
   gl.vertexAttribPointer(positionIndex, 3, gl.FLOAT, false, 0, 0);
 
   let loc = gl.getUniformLocation(line_shader, 'model');
@@ -349,10 +363,29 @@ function drawHair(matrix = new Matrix4()) {
   loc = gl.getUniformLocation(line_shader, 'lightPosition');
   gl.uniform4fv(loc, lightPosition.elements);
 
-  gl.drawArrays(gl.LINE_STRIP, 0, this.final_vertices.length / 3.0);
+  let num_hairs = cube.hairs.length + cube.childHairs.length;
+  let num_verts_per_hair = cube.hairs[0].final_vertices.length;
+  for (let i = 0; i < num_hairs; i++) {
+    gl.drawArrays(gl.LINE_STRIP, (i * num_verts_per_hair) / 3.0, num_verts_per_hair / 3.0);
+  }
 
   gl.disableVertexAttribArray(positionIndex);
   gl.useProgram(null);
+}
+
+function updateRollingBuffer(new_delta_t) {
+  rolling_buffer.push(new_delta_t);
+  if (rolling_buffer.length > rolling_buffer_length) {
+    rolling_buffer.shift();
+  }
+}
+
+function averageRollingBuffer() {
+  let sum = 0;
+  for (let i = 0; i < rolling_buffer.length; i++) {
+    sum += rolling_buffer[i];
+  }
+  return sum / rolling_buffer.length;
 }
 
 export default main;
