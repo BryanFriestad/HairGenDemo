@@ -73,7 +73,7 @@ class HairStrand {
 
   render(matrixWorld, scene) {
     const currentWorld = new Matrix4(matrixWorld);
-    this.draw(matrixWorld, scene);
+    this.draw(currentWorld, scene);
   }
 
   generateBezierControlVertices() {

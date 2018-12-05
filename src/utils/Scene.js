@@ -26,6 +26,9 @@ export default class Scene {
     );
 
     this.projection = new Matrix4().setPerspective(35, 1.5, 0.1, 1000);
+
+    this.rolling_buffer_length = 15;
+    this.rolling_buffer = [];
   }
 
   render() {
@@ -163,10 +166,26 @@ export default class Scene {
 
   calcFPS() {
     if (!this.lastCalledTime) this.lastCalledTime = new Date().getTime();
-    const delta = (new Date().getTime() - this.lastCalledTime) / 1000;
+    this.updateRollingBuffer((new Date().getTime() - this.lastCalledTime) / 1000);
+    let delta = this.averageRollingBuffer();
     document.getElementById('fps_tracker').innerHTML = (1.0 / delta).toFixed(2) + ' fps';
     this.lastCalledTime = new Date().getTime();
     return delta;
+  }
+
+  updateRollingBuffer(new_delta_t) {
+    this.rolling_buffer.push(new_delta_t);
+    if (this.rolling_buffer.length > this.rolling_buffer_length) {
+      this.rolling_buffer.shift();
+    }
+  }
+
+  averageRollingBuffer() {
+    let sum = 0;
+    for (let i = 0; i < this.rolling_buffer.length; i++) {
+      sum += this.rolling_buffer[i];
+    }
+    return sum / this.rolling_buffer.length;
   }
 
   start() {

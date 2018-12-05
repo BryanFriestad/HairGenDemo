@@ -22,6 +22,7 @@ let theModel = getModelData(new THREE.SphereGeometry(1, 8, 8));
 
 // Initialize constraint container for global storage of constraints
 const constraintContainer = new ConstraintContainer();
+let allFinalVertices = [];
 
 const imageFilename = CheckerBoard;
 
@@ -38,6 +39,7 @@ const shininess = 20.0;
 
 let axis = 'y';
 let paused = true;
+let is_mesh = true;
 
 let lightPosition = new Vector4([-4, 4, 4, 1]);
 
@@ -45,7 +47,7 @@ const cube = new HairyObject({
   drawFunction: drawCube,
   modelData: theModel,
   drawHairFunction: drawHair,
-  hairDensity: 0,
+  hairDensity: 10,
   constraintContainer,
 });
 const cubeScale = 2;
@@ -54,7 +56,9 @@ cube.setScale(cubeScale, cubeScale, cubeScale);
 const scene = new Scene({
   additionalAnimation(delta) {
     constraintContainer.solve();
-    cube.update(delta);
+    allFinalVertices = [];
+    cube.update(delta, allFinalVertices);
+    allFinalVertices = new Float32Array(allFinalVertices);
 
     let increment = 1.5 * 60 * delta;
     if (!paused) {
@@ -71,6 +75,8 @@ const scene = new Scene({
           axis = 'z';
           cube.rotateZ(increment);
           break;
+        case 'm':
+          this.is_mesh = !this.is_mesh;
         default:
       }
     }
@@ -150,23 +156,23 @@ function drawCube(matrix = new Matrix4(), scene) {
     return;
   }
 
-  // let texCoordIndex = gl.getAttribLocation(shader, 'a_TexCoord');
-  // if (texCoordIndex < 0) {
-  //   console.log('Failed to get the storage location of a_TexCoord');
-  //   return;
-  // }
+  let texCoordIndex = gl.getAttribLocation(shader, 'a_TexCoord');
+  if (texCoordIndex < 0) {
+    console.log('Failed to get the storage location of a_TexCoord');
+    return;
+  }
 
   gl.enableVertexAttribArray(positionIndex);
   gl.enableVertexAttribArray(normalIndex);
-  // gl.enableVertexAttribArray(texCoordIndex);
+  gl.enableVertexAttribArray(texCoordIndex);
 
   gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
   gl.vertexAttribPointer(positionIndex, 3, gl.FLOAT, false, 0, 0);
   gl.bindBuffer(gl.ARRAY_BUFFER, vertexNormalBuffer);
   gl.vertexAttribPointer(normalIndex, 3, gl.FLOAT, false, 0, 0);
   gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
-  // gl.vertexAttribPointer(texCoordIndex, 2, gl.FLOAT, false, 0, 0);
-  // gl.bindBuffer(gl.ARRAY_BUFFER, null);
+  gl.vertexAttribPointer(texCoordIndex, 2, gl.FLOAT, false, 0, 0);
+  gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
   let loc = gl.getUniformLocation(shader, 'model');
   gl.uniformMatrix4fv(loc, false, matrix.elements);
@@ -187,18 +193,22 @@ function drawCube(matrix = new Matrix4(), scene) {
   loc = gl.getUniformLocation(shader, 'shininess');
   gl.uniform1f(loc, shininess);
 
-  // const textureUnit = 0;
-  // const textureHandle = scene.textures[textureUnit];
-  // gl.activeTexture(gl.TEXTURE0 + textureUnit);
-  // gl.bindTexture(gl.TEXTURE_2D, textureHandle);
-  // loc = gl.getUniformLocation(shader, 'sampler');
-  // gl.uniform1i(loc, textureUnit);
-  //
-  // gl.drawArrays(gl.TRIANGLES, 0, theModel.numVertices);
+  let textureUnit = 0;
+  const textureHandle = scene.textures[textureUnit];
+  gl.activeTexture(gl.TEXTURE0 + textureUnit);
+  gl.bindTexture(gl.TEXTURE_2D, textureHandle);
+  loc = gl.getUniformLocation(shader, 'sampler');
+  gl.uniform1i(loc, textureUnit);
+
+  if (is_mesh) {
+    gl.drawArrays(gl.TRIANGLES, 0, theModel.numVertices);
+  } else {
+    gl.drawArrays(gl.LINE_STRIP, 0, theModel.numVertices);
+  }
 
   gl.disableVertexAttribArray(normalIndex);
   gl.disableVertexAttribArray(positionIndex);
-  // gl.disableVertexAttribArray(texCoordIndex);
+  gl.disableVertexAttribArray(texCoordIndex);
   gl.useProgram(null);
 }
 
@@ -220,7 +230,7 @@ function drawHair(matrix = new Matrix4(), scene) {
   gl.enableVertexAttribArray(positionIndex);
 
   gl.bindBuffer(gl.ARRAY_BUFFER, hairVertexBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, this.final_vertices, gl.STATIC_DRAW);
+  gl.bufferData(gl.ARRAY_BUFFER, allFinalVertices, gl.STATIC_DRAW);
   gl.vertexAttribPointer(positionIndex, 3, gl.FLOAT, false, 0, 0);
 
   let loc = gl.getUniformLocation(line_shader, 'model');
@@ -235,7 +245,11 @@ function drawHair(matrix = new Matrix4(), scene) {
   loc = gl.getUniformLocation(line_shader, 'lightPosition');
   gl.uniform4fv(loc, lightPosition.elements);
 
-  gl.drawArrays(gl.LINE_STRIP, 0, this.final_vertices.length / 3.0);
+  let num_hairs = cube.hairs.length + cube.childHairs.length;
+  let num_verts_per_hair = cube.hairs[0].final_vertices.length;
+  for (let i = 0; i < num_hairs; i++) {
+    gl.drawArrays(gl.LINE_STRIP, (i * num_verts_per_hair) / 3.0, num_verts_per_hair / 3.0);
+  }
 
   gl.disableVertexAttribArray(positionIndex);
   gl.useProgram(null);
