@@ -1,7 +1,7 @@
 import { Matrix4 } from 'lib/cuon-matrix';
 import { Vector3 } from 'lib/cuon-matrix';
 import CS336Object from './CS336Object';
-import HairStrand from './Hair';
+import HairStrand, { SpreadType } from './Hair';
 import ChildHair from './ChildHair';
 import VerletParticle from './VerletParticle';
 import { ConstraintContainer } from './Constraint';
@@ -13,8 +13,10 @@ export default class HairyObject extends CS336Object {
     this.hairs = [];
     this.childHairs = [];
     this.constraints = [];
-    this.res = 5; //5 is a good medium between fast and smooth
+    this.res = 7; //5 is a good medium between fast and smooth
+    this.bez_res = 4;
     this.drawHairFunction = drawHairFunction;
+    this.spread_type = SpreadType.OTHER;
     this.object_pearls = []; //a list of the verlet particles that the hairs can collide with
     this.object_pearls.push(new VerletParticle(this.position.elements[0], this.position.elements[1], this.position.elements[2], true, 0, 2));
     this.generateHairs({
@@ -69,6 +71,8 @@ export default class HairyObject extends CS336Object {
         normal: avgNormal,
         drawFunction: this.drawHairFunction,
         res: this.res,
+        bez_res: this.bez_res,
+        s_type: this.spread_type,
         constraintContainer,
       });
       this.hairs.push(hairStrand);
@@ -89,7 +93,6 @@ export default class HairyObject extends CS336Object {
         this.childHairs.push(
           new ChildHair(parents, {
             drawFunction: this.drawHairFunction,
-            res: this.res,
           })
         );
       }
@@ -101,14 +104,6 @@ export default class HairyObject extends CS336Object {
   }
 
   update(delta_t, allFinalVertices) {
-    // if (Math.random() > 0.08) {
-    //   let rand_hair = Math.floor(Math.random() * this.hairs.length);
-    //   this.hairs[rand_hair].rebase(
-    //     Math.random() * 8 - 4,
-    //     0,
-    //     Math.random() * 8 - 4
-    //   );
-    // }
     for (let i = 0; i < this.hairs.length; i++) {
       this.hairs[i].update(delta_t, allFinalVertices);
     }
@@ -122,18 +117,14 @@ export default class HairyObject extends CS336Object {
     const currentWorld = new Matrix4(matrixWorld).multiply(this.getMatrix());
     this.hairs[0].render(new Matrix4(), scene || this.scene);
     for (let i = 0; i < this.hairs.length; i++) {
-      //this.hairs[i].render(new Matrix4());
       this.hairs[i].rebase(...currentWorld.multiplyVector3(new Vector3(this.hairs[i].base)).elements);
     }
     for (let i = 0; i < this.object_pearls.length; i++) {
       this.object_pearls[i].setPosition(...currentWorld.multiplyVector3(new Vector3(this.object_pearls[i].position.elements)).elements);
     }
-    for (let i = 0; i < this.childHairs.length; i++) {
-      //this.childHairs[i].render(new Matrix4());
-    }
   }
 
-  getParticles(includeChild) {
+  getParticles() {
     let output = [];
     for (let i = 0; i < this.hairs.length; i++) {
       let temp = this.hairs[i].verlet_parts;
