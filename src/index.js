@@ -1,4 +1,5 @@
 import example from './example';
+import demo from './demo';
 import { makeCanvas } from './utils/dom';
 
 function onWindowLoad() {
@@ -9,7 +10,7 @@ function onWindowLoad() {
     style: 'position: absolute; top: 0px; left:0px;',
   });
 
-  example();
+  demo();
 }
 
 window.addEventListener('load', onWindowLoad);
