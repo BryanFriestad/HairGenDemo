@@ -15,11 +15,7 @@
 export class Matrix4 {
   constructor(opt_src) {
     var i, s, d;
-    if (
-      opt_src &&
-      typeof opt_src === 'object' &&
-      opt_src.hasOwnProperty('elements')
-    ) {
+    if (opt_src && typeof opt_src === 'object' && opt_src.hasOwnProperty('elements')) {
       s = opt_src.elements;
       d = new Float32Array(16);
       for (i = 0; i < 16; ++i) {
@@ -27,24 +23,7 @@ export class Matrix4 {
       }
       this.elements = d;
     } else {
-      this.elements = new Float32Array([
-        1,
-        0,
-        0,
-        0,
-        0,
-        1,
-        0,
-        0,
-        0,
-        0,
-        1,
-        0,
-        0,
-        0,
-        0,
-        1,
-      ]);
+      this.elements = new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
     }
   }
 
@@ -144,9 +123,9 @@ export class Matrix4 {
     var v = new Vector3();
     var result = v.elements;
 
-    result[0] = p[0] * e[0] + p[1] * e[4] + p[2] * e[8] + e[11];
-    result[1] = p[0] * e[1] + p[1] * e[5] + p[2] * e[9] + e[12];
-    result[2] = p[0] * e[2] + p[1] * e[6] + p[2] * e[10] + e[13];
+    result[0] = p[0] * e[0] + p[1] * e[4] + p[2] * e[8] + e[12];
+    result[1] = p[0] * e[1] + p[1] * e[5] + p[2] * e[9] + e[13];
+    result[2] = p[0] * e[2] + p[1] * e[6] + p[2] * e[10] + e[14];
 
     return v;
   }
@@ -213,121 +192,25 @@ export class Matrix4 {
     d = this.elements;
     inv = new Float32Array(16);
 
-    inv[0] =
-      s[5] * s[10] * s[15] -
-      s[5] * s[11] * s[14] -
-      s[9] * s[6] * s[15] +
-      s[9] * s[7] * s[14] +
-      s[13] * s[6] * s[11] -
-      s[13] * s[7] * s[10];
-    inv[4] =
-      -s[4] * s[10] * s[15] +
-      s[4] * s[11] * s[14] +
-      s[8] * s[6] * s[15] -
-      s[8] * s[7] * s[14] -
-      s[12] * s[6] * s[11] +
-      s[12] * s[7] * s[10];
-    inv[8] =
-      s[4] * s[9] * s[15] -
-      s[4] * s[11] * s[13] -
-      s[8] * s[5] * s[15] +
-      s[8] * s[7] * s[13] +
-      s[12] * s[5] * s[11] -
-      s[12] * s[7] * s[9];
-    inv[12] =
-      -s[4] * s[9] * s[14] +
-      s[4] * s[10] * s[13] +
-      s[8] * s[5] * s[14] -
-      s[8] * s[6] * s[13] -
-      s[12] * s[5] * s[10] +
-      s[12] * s[6] * s[9];
+    inv[0] = s[5] * s[10] * s[15] - s[5] * s[11] * s[14] - s[9] * s[6] * s[15] + s[9] * s[7] * s[14] + s[13] * s[6] * s[11] - s[13] * s[7] * s[10];
+    inv[4] = -s[4] * s[10] * s[15] + s[4] * s[11] * s[14] + s[8] * s[6] * s[15] - s[8] * s[7] * s[14] - s[12] * s[6] * s[11] + s[12] * s[7] * s[10];
+    inv[8] = s[4] * s[9] * s[15] - s[4] * s[11] * s[13] - s[8] * s[5] * s[15] + s[8] * s[7] * s[13] + s[12] * s[5] * s[11] - s[12] * s[7] * s[9];
+    inv[12] = -s[4] * s[9] * s[14] + s[4] * s[10] * s[13] + s[8] * s[5] * s[14] - s[8] * s[6] * s[13] - s[12] * s[5] * s[10] + s[12] * s[6] * s[9];
 
-    inv[1] =
-      -s[1] * s[10] * s[15] +
-      s[1] * s[11] * s[14] +
-      s[9] * s[2] * s[15] -
-      s[9] * s[3] * s[14] -
-      s[13] * s[2] * s[11] +
-      s[13] * s[3] * s[10];
-    inv[5] =
-      s[0] * s[10] * s[15] -
-      s[0] * s[11] * s[14] -
-      s[8] * s[2] * s[15] +
-      s[8] * s[3] * s[14] +
-      s[12] * s[2] * s[11] -
-      s[12] * s[3] * s[10];
-    inv[9] =
-      -s[0] * s[9] * s[15] +
-      s[0] * s[11] * s[13] +
-      s[8] * s[1] * s[15] -
-      s[8] * s[3] * s[13] -
-      s[12] * s[1] * s[11] +
-      s[12] * s[3] * s[9];
-    inv[13] =
-      s[0] * s[9] * s[14] -
-      s[0] * s[10] * s[13] -
-      s[8] * s[1] * s[14] +
-      s[8] * s[2] * s[13] +
-      s[12] * s[1] * s[10] -
-      s[12] * s[2] * s[9];
+    inv[1] = -s[1] * s[10] * s[15] + s[1] * s[11] * s[14] + s[9] * s[2] * s[15] - s[9] * s[3] * s[14] - s[13] * s[2] * s[11] + s[13] * s[3] * s[10];
+    inv[5] = s[0] * s[10] * s[15] - s[0] * s[11] * s[14] - s[8] * s[2] * s[15] + s[8] * s[3] * s[14] + s[12] * s[2] * s[11] - s[12] * s[3] * s[10];
+    inv[9] = -s[0] * s[9] * s[15] + s[0] * s[11] * s[13] + s[8] * s[1] * s[15] - s[8] * s[3] * s[13] - s[12] * s[1] * s[11] + s[12] * s[3] * s[9];
+    inv[13] = s[0] * s[9] * s[14] - s[0] * s[10] * s[13] - s[8] * s[1] * s[14] + s[8] * s[2] * s[13] + s[12] * s[1] * s[10] - s[12] * s[2] * s[9];
 
-    inv[2] =
-      s[1] * s[6] * s[15] -
-      s[1] * s[7] * s[14] -
-      s[5] * s[2] * s[15] +
-      s[5] * s[3] * s[14] +
-      s[13] * s[2] * s[7] -
-      s[13] * s[3] * s[6];
-    inv[6] =
-      -s[0] * s[6] * s[15] +
-      s[0] * s[7] * s[14] +
-      s[4] * s[2] * s[15] -
-      s[4] * s[3] * s[14] -
-      s[12] * s[2] * s[7] +
-      s[12] * s[3] * s[6];
-    inv[10] =
-      s[0] * s[5] * s[15] -
-      s[0] * s[7] * s[13] -
-      s[4] * s[1] * s[15] +
-      s[4] * s[3] * s[13] +
-      s[12] * s[1] * s[7] -
-      s[12] * s[3] * s[5];
-    inv[14] =
-      -s[0] * s[5] * s[14] +
-      s[0] * s[6] * s[13] +
-      s[4] * s[1] * s[14] -
-      s[4] * s[2] * s[13] -
-      s[12] * s[1] * s[6] +
-      s[12] * s[2] * s[5];
+    inv[2] = s[1] * s[6] * s[15] - s[1] * s[7] * s[14] - s[5] * s[2] * s[15] + s[5] * s[3] * s[14] + s[13] * s[2] * s[7] - s[13] * s[3] * s[6];
+    inv[6] = -s[0] * s[6] * s[15] + s[0] * s[7] * s[14] + s[4] * s[2] * s[15] - s[4] * s[3] * s[14] - s[12] * s[2] * s[7] + s[12] * s[3] * s[6];
+    inv[10] = s[0] * s[5] * s[15] - s[0] * s[7] * s[13] - s[4] * s[1] * s[15] + s[4] * s[3] * s[13] + s[12] * s[1] * s[7] - s[12] * s[3] * s[5];
+    inv[14] = -s[0] * s[5] * s[14] + s[0] * s[6] * s[13] + s[4] * s[1] * s[14] - s[4] * s[2] * s[13] - s[12] * s[1] * s[6] + s[12] * s[2] * s[5];
 
-    inv[3] =
-      -s[1] * s[6] * s[11] +
-      s[1] * s[7] * s[10] +
-      s[5] * s[2] * s[11] -
-      s[5] * s[3] * s[10] -
-      s[9] * s[2] * s[7] +
-      s[9] * s[3] * s[6];
-    inv[7] =
-      s[0] * s[6] * s[11] -
-      s[0] * s[7] * s[10] -
-      s[4] * s[2] * s[11] +
-      s[4] * s[3] * s[10] +
-      s[8] * s[2] * s[7] -
-      s[8] * s[3] * s[6];
-    inv[11] =
-      -s[0] * s[5] * s[11] +
-      s[0] * s[7] * s[9] +
-      s[4] * s[1] * s[11] -
-      s[4] * s[3] * s[9] -
-      s[8] * s[1] * s[7] +
-      s[8] * s[3] * s[5];
-    inv[15] =
-      s[0] * s[5] * s[10] -
-      s[0] * s[6] * s[9] -
-      s[4] * s[1] * s[10] +
-      s[4] * s[2] * s[9] +
-      s[8] * s[1] * s[6] -
-      s[8] * s[2] * s[5];
+    inv[3] = -s[1] * s[6] * s[11] + s[1] * s[7] * s[10] + s[5] * s[2] * s[11] - s[5] * s[3] * s[10] - s[9] * s[2] * s[7] + s[9] * s[3] * s[6];
+    inv[7] = s[0] * s[6] * s[11] - s[0] * s[7] * s[10] - s[4] * s[2] * s[11] + s[4] * s[3] * s[10] + s[8] * s[2] * s[7] - s[8] * s[3] * s[6];
+    inv[11] = -s[0] * s[5] * s[11] + s[0] * s[7] * s[9] + s[4] * s[1] * s[11] - s[4] * s[3] * s[9] - s[8] * s[1] * s[7] + s[8] * s[3] * s[5];
+    inv[15] = s[0] * s[5] * s[10] - s[0] * s[6] * s[9] - s[4] * s[1] * s[10] + s[4] * s[2] * s[9] + s[8] * s[1] * s[6] - s[8] * s[2] * s[5];
 
     det = s[0] * inv[0] + s[1] * inv[4] + s[2] * inv[8] + s[3] * inv[12];
     if (det === 0) {
@@ -407,9 +290,7 @@ export class Matrix4 {
    * @return this
    */
   ortho(left, right, bottom, top, near, far) {
-    return this.concat(
-      new Matrix4().setOrtho(left, right, bottom, top, near, far)
-    );
+    return this.concat(new Matrix4().setOrtho(left, right, bottom, top, near, far));
   }
 
   /**
@@ -475,9 +356,7 @@ export class Matrix4 {
    * @return this
    */
   frustum(left, right, bottom, top, near, far) {
-    return this.concat(
-      new Matrix4().setFrustum(left, right, bottom, top, near, far)
-    );
+    return this.concat(new Matrix4().setFrustum(left, right, bottom, top, near, far));
   }
 
   /**
@@ -848,19 +727,7 @@ export class Matrix4 {
    * @return this
    */
   lookAt(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ) {
-    return this.concat(
-      new Matrix4().setLookAt(
-        eyeX,
-        eyeY,
-        eyeZ,
-        centerX,
-        centerY,
-        centerZ,
-        upX,
-        upY,
-        upZ
-      )
-    );
+    return this.concat(new Matrix4().setLookAt(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ));
   }
 
   /**
@@ -873,11 +740,7 @@ export class Matrix4 {
     var mat = new Matrix4();
     var e = mat.elements;
 
-    var dot =
-      plane[0] * light[0] +
-      plane[1] * light[1] +
-      plane[2] * light[2] +
-      plane[3] * light[3];
+    var dot = plane[0] * light[0] + plane[1] * light[1] + plane[2] * light[2] + plane[3] * light[3];
 
     e[0] = dot - light[0] * plane[0];
     e[1] = -light[1] * plane[0];
@@ -909,22 +772,9 @@ export class Matrix4 {
    * @param lightX, lightY, lightZ The vector of the direction of light.(Not necessary to be normalized.)
    * @return this
    */
-  dropShadowDirectionally(
-    normX,
-    normY,
-    normZ,
-    planeX,
-    planeY,
-    planeZ,
-    lightX,
-    lightY,
-    lightZ
-  ) {
+  dropShadowDirectionally(normX, normY, normZ, planeX, planeY, planeZ, lightX, lightY, lightZ) {
     var a = planeX * normX + planeY * normY + planeZ * normZ;
-    return this.dropShadow(
-      [normX, normY, normZ, -a],
-      [lightX, lightY, lightZ, 0]
-    );
+    return this.dropShadow([normX, normY, normZ, -a], [lightX, lightY, lightZ, 0]);
   }
 }
 
