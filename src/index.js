@@ -7,7 +7,6 @@ function onWindowLoad() {
     id: 'theCanvas',
     width: 600,
     height: 400,
-    style: 'position: absolute; top: 0px; left:0px;',
   });
 
   demo();
