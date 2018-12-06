@@ -1,6 +1,7 @@
-import example from './example';
-import demo from './demo';
-import { makeCanvas } from './utils/dom';
+import example from 'example';
+import demo from 'demo';
+import { makeCanvas } from 'utils/dom';
+import { setupForm } from 'utils/controls';
 
 function onWindowLoad() {
   makeCanvas({
@@ -9,6 +10,7 @@ function onWindowLoad() {
     height: 400,
   });
 
+  setupForm();
   demo();
 }
 

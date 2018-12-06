@@ -2,7 +2,7 @@ import { Matrix4, Vector4 } from 'lib/cuon-matrix';
 import { getWebGLContext, initShaders } from 'lib/cuon-utils';
 
 export default class Scene {
-  constructor({ additionalAnimation = () => {}, additionalSetup = () => {}, additionalHandleKeypress = () => {} }) {
+  constructor({ additionalAnimation = () => {}, additionalSetup = () => {}, additionalHandleKeydown = () => {}, additionalHandleKeyup = () => {} }) {
     this.objects = [];
 
     this.imageFilenames = [];
@@ -18,7 +18,8 @@ export default class Scene {
 
     this.additionalSetup = additionalSetup;
     this.additionalAnimation = additionalAnimation;
-    this.additionalHandleKeypress = additionalHandleKeypress;
+    this.additionalHandleKeydown = additionalHandleKeydown;
+    this.additionalHandleKeyup = additionalHandleKeyup;
     this.view = new Matrix4().setLookAt(
       ...[5, 5, 5], // eye
       ...[0, 0, 0], // at - looking at the origin
@@ -67,7 +68,9 @@ export default class Scene {
   }
 
   getChar(event) {
-    if (event.which == null) {
+    if (event.key) {
+      return event.key;
+    } else if (event.which == null) {
       return String.fromCharCode(event.keyCode); // IE
     } else if (event.which != 0 && event.charCode != 0) {
       return String.fromCharCode(event.which); // the rest
@@ -76,9 +79,15 @@ export default class Scene {
     }
   }
 
-  handleKeyPress(event) {
+  handleKeydown(event) {
     let ch = this.getChar(event);
-    const ahk = this.additionalHandleKeypress(event, ch);
+    const ahk = this.additionalHandleKeydown(event, ch);
+    if (ahk === true || ahk === false) return ahk;
+  }
+
+  handleKeyup(event) {
+    let ch = this.getChar(event);
+    const ahk = this.additionalHandleKeyup(event, ch);
     if (ahk === true || ahk === false) return ahk;
   }
 
@@ -135,7 +144,8 @@ export default class Scene {
     const canvas = document.getElementById('theCanvas');
     this.canvas = canvas;
 
-    this.keypressListener = window.addEventListener('keypress', this.handleKeyPress.bind(this));
+    this.keydownListener = window.addEventListener('keydown', this.handleKeydown.bind(this));
+    this.keyupListener = window.addEventListener('keyup', this.handleKeyup.bind(this));
 
     this.gl = getWebGLContext(canvas, false);
     const gl = this.gl;
@@ -194,6 +204,7 @@ export default class Scene {
 
   end() {
     cancelAnimationFrame(this.animationFrame);
-    window.removeEventListener('keypress', this.keypressListener);
+    window.removeEventListener('keydown', this.keydownListener);
+    window.removeEventListener('keyup', this.keyupListener);
   }
 }
