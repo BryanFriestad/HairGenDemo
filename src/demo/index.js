@@ -12,8 +12,9 @@ import FSHADER_SOURCE from './fshader.glsl';
 import VSHADER_SOURCE_LINES from './vshader_lines.glsl';
 import FSHADER_SOURCE_LINES from './fshader_lines.glsl';
 import CheckerBoard from './check64.png';
+import Skin from './skin.jpg';
 
-const sphereModel = getModelData(new THREE.SphereGeometry(1, 8, 8));
+const sphereModel = getModelData(new THREE.SphereGeometry(1, 10, 10));
 const highDensitySphereModel = getModelData(new THREE.SphereGeometry(1, 12, 12));
 const cubeModel = getModelData(new THREE.CubeGeometry(1, 1, 1, 1, 1, 1));
 const planeModel = getModelData(new THREE.PlaneGeometry());
