@@ -25,7 +25,6 @@ const scene1 = new Scene({
     }
   },
   additionalSetup() {
-    constraintContainer.generatePPConstraints(cube.getParticles(false));
   },
   additionalHandleKeypress(event, ch) {
     switch (ch) {

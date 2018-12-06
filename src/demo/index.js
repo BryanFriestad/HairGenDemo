@@ -14,7 +14,7 @@ import FSHADER_SOURCE_LINES from './fshader_lines.glsl';
 import CheckerBoard from './check64.png';
 
 const sphereModel = getModelData(new THREE.SphereGeometry(1, 8, 8));
-const highDensitySphereModel = getModelData(new THREE.SphereGeometry(1, 32, 32));
+const highDensitySphereModel = getModelData(new THREE.SphereGeometry(1, 12, 12));
 const cubeModel = getModelData(new THREE.CubeGeometry(1, 1, 1, 1, 1, 1));
 const planeModel = getModelData(new THREE.PlaneGeometry());
 
@@ -65,7 +65,6 @@ function initHairyMesh({ model, drawFunction, drawHairFunction, scale = 2, posit
   });
   mesh.setScale(...Array(3).fill(scale));
   mesh.setPosition(...position);
-  constraintContainer.generatePPConstraints(mesh.getParticles(false));
   return mesh;
 }
 
