@@ -22,6 +22,7 @@ class HairStrand {
     this.verlet_parts = [];
     this.bezier_control_vertices = [];
     this.final_vertices;
+    this.final_colors;
     this.draw = drawFunction;
 
     this.spread_type = s_type;

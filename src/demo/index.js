@@ -18,6 +18,12 @@ const highDensitySphereModel = getModelData(new THREE.SphereGeometry(1, 32, 32))
 const cubeModel = getModelData(new THREE.CubeGeometry(1, 1, 1, 1, 1, 1));
 const planeModel = getModelData(new THREE.PlaneGeometry());
 
+const blondeHair = [0.9, 0.8, 0.5, 1.0];
+const blackHair  = [0.035, 0.03, 0.023, 1.0];
+const pinkHair   = [0.9, 0.0, 0.5, 1.0];
+const redHair    = [0.749, 0.165, 0.0, 1.0];
+const gingerHair = [0.69, 0.396, 0.0, 1.0];
+
 // Initialize constraint container for global storage of constraints
 let constraintContainer = new ConstraintContainer();
 
@@ -183,6 +189,8 @@ class HairyMesh {
     this.model = model;
     this.scene = scene;
     this.allFinalVertices = [];
+    this.allFinalColors = [];
+    this.hairColor = blackHair;
     this.object = initHairyMesh({ model, drawFunction: this.drawMesh.bind(this), drawHairFunction: this.drawHair.bind(this), ...meshParams });
     scene.addObject(this.object);
     scene.addBuffer({
@@ -204,6 +212,7 @@ class HairyMesh {
 
   update(delta) {
     this.allFinalVertices = [];
+    this.allFinalColors = [];
     this.object.update(delta, this.allFinalVertices);
     this.allFinalVertices = new Float32Array(this.allFinalVertices);
   }
@@ -319,6 +328,8 @@ class HairyMesh {
     gl.uniformMatrix4fv(loc, false, projection.elements);
     loc = gl.getUniformLocation(line_shader, 'normalMatrix');
     gl.uniformMatrix3fv(loc, false, makeNormalMatrixElements(matrix, view));
+    loc = gl.getUniformLocation(line_shader, 'color');
+    gl.uniform4fv(loc, this.hairColor);
 
     loc = gl.getUniformLocation(line_shader, 'lightPosition');
     gl.uniform4fv(loc, lightPosition.elements);

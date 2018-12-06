@@ -120,7 +120,7 @@ export default class HairyObject extends CS336Object {
       this.hairs[i].rebase(...currentWorld.multiplyVector3(new Vector3(this.hairs[i].base)).elements);
     }
     for (let i = 0; i < this.object_pearls.length; i++) {
-      this.object_pearls[i].setPosition(...currentWorld.multiplyVector3(new Vector3(this.object_pearls[i].position.elements)).elements);
+      this.object_pearls[i].setPosition(...currentWorld.multiplyVector3(new Vector3(this.object_pearls[i].originalPosition.elements)).elements);
     }
   }
 

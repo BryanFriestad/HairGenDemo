@@ -3,6 +3,7 @@ import Vector from 'utils/Vector';
 //a particle to represent a point in a hair strand simulated using verlet integration
 class VerletParticle {
   constructor(base_x, base_y, base_z, anchored, damping, p_size) {
+    this.originalPosition = new Vector3([base_x, base_y, base_z]);
     this.position = new Vector3([base_x, base_y, base_z]);
     this.prevPosition = new Vector3([base_x, base_y, base_z]);
     this.velocity = new Vector3();

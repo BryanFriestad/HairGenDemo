@@ -148,7 +148,7 @@ export default class Scene {
     this.bufferSources.forEach(this.initBuffer.bind(this));
     this.images.forEach(this.loadTexture.bind(this));
 
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.clearColor(0.529, 0.808, 0.922, 1.0);
 
     gl.enable(gl.DEPTH_TEST);
 
