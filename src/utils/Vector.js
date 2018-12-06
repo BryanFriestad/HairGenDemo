@@ -27,11 +27,22 @@ export default class Vector {
     return new Vector(result);
   }
 
+  equals(other) {
+    if (other.items.length !== this.items.length) return false;
+    for (let i = 0; i < this.items.length; i++) {
+      if (this.items[i] !== other.items[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   normalize() {
     let norm = 0;
     for (let i = 0; i < this.items.length; i++) {
       norm += this.items[i] * this.items[i];
     }
+    if (norm === 0) return new Vector(this.items);
     let result = [];
     for (let i = 0; i < this.items.length; i++) {
       result.push(this.items[i] / norm);

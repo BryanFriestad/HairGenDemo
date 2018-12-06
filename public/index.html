@@ -75,23 +75,31 @@ ul {
         <h3>Form Controls</h3>
         <form>
           <div>
-            <label>Model:</label>
-            <div id="model-input-group"></div>
+            <label>Move Speed:</label>
+            <input type="range" id="move-speed-slider" min="0" max="1.5" step="0.1" value="0.1">
           </div>
+          <div>
+            <label>Hair Color:</label>
+            <select id="hair_color_select"></select>
+          </div>
+          <div><small>The following changes apply once scene is reloaded</small></div>
           <div>
             <label>Hair Density:</label>
             <input type="range" id="hair-density-slider" min="0" max="15" step="1" value="5">
           </div>
           <div>
-            <label>Move Speed:</label>
-            <input type="range" id="move-speed-slider" min="0" max="1.5" step="0.1" value="0.1">
+            <label>Hair Length:</label>
+            <input type="range" id="hair-length-slider" min="0.5" max="10" step="0.5" value="4.5">
+          </div>
+          <div>
+            <label>Bezier Resolution:</label>
+            <input type="range" id="bez-res-slider" min="2" max="20" step="1" value="4">
           </div>
         </form>
       </div>
       <div id="keyboard-controls">
         <h3>Keyboard controls:</h3>
         <ul>
-          <li><strong>[ r ]</strong> - reloads scene</li>
           <li><strong>[ m ]</strong> - toggles mesh view/wirefram view</li>
           <li><strong>[ space ]</strong> - start/stop object rotation</li>
           <li><strong>[ x/y/z ]</strong> - rotate around internal axis</li>

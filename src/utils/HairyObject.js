@@ -5,6 +5,7 @@ import HairStrand, { SpreadType } from './Hair';
 import ChildHair from './ChildHair';
 import VerletParticle from './VerletParticle';
 import { ConstraintContainer } from './Constraint';
+import { getSettings } from 'utils/controls';
 
 export default class HairyObject extends CS336Object {
   constructor({ drawFunction = () => {}, modelData = {}, drawHairFunction = () => {}, hairDensity = 0, constraintContainer }) {
@@ -14,7 +15,7 @@ export default class HairyObject extends CS336Object {
     this.childHairs = [];
     this.constraints = [];
     this.res = 7; //5 is a good medium between fast and smooth
-    this.bez_res = 4;
+    this.bez_res = getSettings().bezRes || 4;
     this.drawHairFunction = drawHairFunction;
     this.spread_type = SpreadType.OTHER;
     this.object_pearls = []; //a list of the verlet particles that the hairs can collide with
@@ -66,7 +67,7 @@ export default class HairyObject extends CS336Object {
       avgNormal = [avgNormal[0] / norm, avgNormal[1] / norm, avgNormal[2] / norm];
 
       const hairStrand = new HairStrand({
-        length: 4.5,
+        length: getSettings().hairLength || 4.5,
         base: v_base,
         normal: avgNormal,
         drawFunction: this.drawHairFunction,
